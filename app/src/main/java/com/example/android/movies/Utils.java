@@ -313,29 +313,35 @@ class Utils {
             // which represents a list of items (or videos).
             JSONArray resultsArray = baseJsonResponse.getJSONArray("results");
             // For each video in the results, create an {@link MovieData} object
-            for (int i = reviewLength; i < (resultsArray.length()+reviewLength); i++) {
+            for (int i = reviewLength; i < (resultsArray.length() + reviewLength); i++) {
+                if (i < reviewLength) {
+                    //Create a blank Review Data item to act as a placeholder until the ReviewData
+                    //and VideoData can be merged
+                    Data mBlank = new Data(" ", " ");
+                    videoData.add(mBlank);
+                } else {
+                    // Get a single article at position i within the list of videos
+                    JSONObject currentVideo = resultsArray.getJSONObject(i - reviewLength);
 
-                // Get a single article at position i within the list of videos
-                JSONObject currentVideo = resultsArray.getJSONObject(i);
+                    // Extract the value for the key called "key"
+                    String key = currentVideo.getString("key");
 
-                // Extract the value for the key called "key"
-                String key = currentVideo.getString("key");
+                    // Build the video URL
+                    String urlString = ("http://www.youtube.com/watch?v=" + key);
+                    URL mUrl = createUrl(urlString);
 
-                // Build the video URL
-                String urlString = ("http://www.youtube.com/watch?v=" + key);
-                URL mUrl = createUrl(urlString);
+                    // Extract the value for the key called "name"
+                    String name = currentVideo.getString("name");
 
-                // Extract the value for the key called "name"
-                String name = currentVideo.getString("name");
+                    // Create a new {@link Data} object with the name and url
+                    // from the JSON response.
+                    Data mVideo = new Data(name, mUrl);
 
-                // Create a new {@link Data} object with the name and url
-                // from the JSON response.
-                Data mVideo = new Data(name, mUrl);
+                    // Add the new {@link MovieData} to the list of movies.
+                    videoData.add(mVideo);
+                }
 
-                // Add the new {@link MovieData} to the list of movies.
-                videoData.add(mVideo);
             }
-
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
             // catch the exception here, so the app doesn't crash. Print a log message

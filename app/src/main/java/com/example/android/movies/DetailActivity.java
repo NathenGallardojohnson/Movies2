@@ -24,7 +24,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     private final String VIDEOS = "/videos";
     private final String REVIEWS = "/reviews";
     //API KEY REMOVED - get one at  https://www.themoviedb.org/account/signup
-    private final String APIKEY = " ";
+    private final String APIKEY = "?api_key=bf4f905b88823288bf4ac9bca4225847";
     VideoAdapter videoAdapter;
     ReviewAdapter reviewAdapter;
     ListView listView;

@@ -27,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private final String POPULAR = "/popular";
     private final String TOPRATED = "/top_rated";
     //API KEY REMOVED - get one at https://www.themoviedb.org/account/signup
-    private final String APIKEY = "";
+    private final String APIKEY = "?api_key=bf4f905b88823288bf4ac9bca4225847";
     private GridViewAdapter gridAdapter;
     private View loadingIndicator;
     private String url = (BASEAPIURL + POPULAR + APIKEY);

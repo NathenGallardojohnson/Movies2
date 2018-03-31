@@ -23,9 +23,6 @@
         android:paddingStart="16dp"
         tools:text="name" />
 
-    //TODO replace this delete textview and make item clickable using url to start intent instead of
-    showing url
-
     <TextView
         android:id="@+id/key_text_view"
         android:layout_width="wrap_content"
