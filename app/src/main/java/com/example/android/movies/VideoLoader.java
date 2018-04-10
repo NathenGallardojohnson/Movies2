@@ -1,6 +1,5 @@
 package com.example.android.movies;
 
-import android.content.AsyncTaskLoader;
 import android.content.Context;
 
 import java.util.List;
@@ -9,7 +8,7 @@ import java.util.List;
  * Created by Hardkornate on 3/22/18.
  */
 
-class VideoLoader extends AsyncTaskLoader<List<Data>> {
+class VideoLoader extends android.support.v4.content.AsyncTaskLoader<List<Data>> {
 
     private String mUrl = "about:blank";
 

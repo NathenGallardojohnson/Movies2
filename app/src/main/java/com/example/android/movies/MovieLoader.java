@@ -5,7 +5,7 @@ import android.content.Context;
 
 import java.util.List;
 
-class MovieLoader extends AsyncTaskLoader<List<MovieData>> {
+class MovieLoader extends android.support.v4.content.AsyncTaskLoader<List<MovieData>> {
 
     private String mUrl = "about:blank";
 

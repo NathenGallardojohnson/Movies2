@@ -1,28 +1,45 @@
 package com.example.android.movies;
 
-import android.app.LoaderManager;
+import android.os.Parcelable;
+import android.support.v4.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.Loader;
+import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.GridView;
-import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<List<MovieData>> {
+import static com.example.android.movies.data.MovieContract.FAVORITED;
+import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
+import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_URI;
+import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITE_PROJECTION;
+import static com.example.android.movies.data.MovieContract.ORDER_BY_POPULAR;
+import static com.example.android.movies.data.MovieContract.ORDER_BY_VOTE;
+
+public class MainActivity extends AppCompatActivity /*implements SharedPreferences.OnSharedPreferenceChangeListener*/ {
+
+    private final String LOG_TAG = MainActivity.class.getSimpleName();
 
     private static final int MOVIE_LOADER_ID = 1;
-    private final List<MovieData> movieData = new ArrayList<>();
+    private static final int FAVORITE_LOADER_ID = 2;
+    private static final String MOVIE_KEY = "movies";
+    private static final String FAVORITE_KEY = "favorite";
+    private static final String ORDER_BY_KEY = "orderby";
+    private static final String URL_KEY = "url" ;
+    private List<MovieData> movieData = new ArrayList<>();
     private final String BASEAPIURL = "http://api.themoviedb.org/3/movie";
     private final String POPULAR = "/popular";
     private final String TOPRATED = "/top_rated";
@@ -31,14 +48,20 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     private GridViewAdapter gridAdapter;
     private View loadingIndicator;
     private String url = (BASEAPIURL + POPULAR + APIKEY);
+    private String ORDERBY = null;
+    private boolean SHOWFAVORITES = false;
     private TextView mEmptyStateTextView;
+    private static boolean preferencesUpdated = false;
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Switch switchButton = findViewById(R.id.switchOne);
-
+        Toolbar myToolbar = findViewById(R.id.my_toolbar);
+        setSupportActionBar(myToolbar);
+        //Switch switchButton = findViewById(R.id.switchOne);
 
         GridView gridView = findViewById(R.id.gridView);
         mEmptyStateTextView = findViewById(R.id.empty_view);
@@ -49,13 +72,21 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
 
+/*        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
+
+        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
+
+        sharedPref.registerOnSharedPreferenceChangeListener(this);*/
+
+        final LoaderManager lm = getSupportLoaderManager();
 
         if (isOnline()) {
             // Get a reference to the LoaderManager, in order to interact with loaders
             Bundle bundle = new Bundle();
             bundle.putString("QUERY", url);
-            getLoaderManager().initLoader(MOVIE_LOADER_ID, bundle, this);
-            getLoaderManager().restartLoader(MOVIE_LOADER_ID, bundle, this);
+            lm.initLoader(MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
+            lm.initLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
+
         } else {
 
             // Clear the adapter of previous movie data
@@ -63,22 +94,29 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             loadingIndicator.setVisibility(View.GONE);
             // Update empty state with no connection error message
             mEmptyStateTextView.setText(R.string.no_internet_connection);
+            Bundle bundle = new Bundle();
+            bundle.putString(ORDER_BY_KEY, ORDERBY);
+            lm.initLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
         }
-        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+
+/*        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
                 if (bChecked) {
-                    Toast.makeText(getApplicationContext(), R.string.switch_popular, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext(),
+                            R.string.switch_popular, Toast.LENGTH_SHORT).show();
                     url = (BASEAPIURL + POPULAR + APIKEY);
                 } else {
-                    Toast.makeText(getApplicationContext(), R.string.switch_rating, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getApplicationContext()
+                            , R.string.switch_rating, Toast.LENGTH_SHORT).show();
                     url = (BASEAPIURL + TOPRATED + APIKEY);
                 }
                 if (isOnline()) {
                     // Get a reference to the LoaderManager, in order to interact with loaders
                     Bundle bundle = new Bundle();
                     bundle.putString("QUERY", url);
-                    getLoaderManager().restartLoader(MOVIE_LOADER_ID, bundle, MainActivity.this);
+                    lm.restartLoader
+                            (MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
                 } else {
 
                     // Clear the adapter of previous movie data
@@ -88,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     mEmptyStateTextView.setText(R.string.no_internet_connection);
                 }
             }
-        });
+        });*/
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
@@ -110,9 +148,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     }
 
-    private boolean isOnline() {
+    protected boolean isOnline() {
         // Get a reference to the ConnectivityManager to check state of network connectivity
-        ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
 
         // Get details on the currently active default data network
         NetworkInfo networkInfo = connMgr != null ? connMgr.getActiveNetworkInfo() : null;
@@ -121,48 +160,189 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         return (networkInfo != null && networkInfo.isConnected());
     }
 
+    private LoaderManager.LoaderCallbacks<List<MovieData>> movieLoaderCallbacks =
+            new LoaderManager.LoaderCallbacks<List<MovieData>>() {
+
+                @Override
+                public MovieLoader onCreateLoader(int i, Bundle bundle) {
+
+                    String url = bundle.getString("QUERY");
+
+                    View loadingIndicator = findViewById(R.id.loading_indicator);
+                    loadingIndicator.setVisibility(View.VISIBLE);
+
+                    return new MovieLoader(MainActivity.this, url);
+                }
+
+                @Override
+                public void onLoadFinished(android.support.v4.content.Loader<List<MovieData>> loader, List<MovieData> data) {
+                    // Hide loading indicator because the data has been loaded
+                    View loadingIndicator = findViewById(R.id.loading_indicator);
+                    loadingIndicator.setVisibility(View.GONE);
+
+                    // Set empty state text to display "There are no movies"
+                    mEmptyStateTextView.setText(R.string.no_movies);
+                    mEmptyStateTextView.setVisibility(View.VISIBLE);
+
+                    if (!isOnline()) {
+                        mEmptyStateTextView.setText(R.string.no_internet_connection);
+                    }
+
+                    // Clear the adapter of previous movie data
+                    gridAdapter.clear();
+
+                    // If there is a valid list of {@link Movies}, then add them to the adapter's
+                    // data set. This will trigger the GridView to update.
+                    if (data != null && !data.isEmpty()) {
+                        mEmptyStateTextView.setVisibility(View.GONE);
+                        gridAdapter.addAll(data);
+                        gridAdapter.notifyDataSetChanged();
+                    }
+                }
+
+                @Override
+                public void onLoaderReset(android.support.v4.content.Loader<List<MovieData>> loader) {
+                    // Loader reset, so we can clear out our existing data.
+                    gridAdapter.clear();
+                }
+
+            };
+
+    private LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
+            new LoaderManager.LoaderCallbacks<Cursor>() {
+
+                @Override
+                public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle bundle)
+                {
+                    ORDERBY = bundle.getString(ORDER_BY_KEY);
+                    mEmptyStateTextView.setVisibility(View.GONE);
+                    return new android.support.v4.content.CursorLoader(
+                            MainActivity.this,
+                            CONTENT_URI,
+                            FAVORITE_PROJECTION,
+                            IS_FAVORITED,
+                            FAVORITED,
+                            ORDERBY
+                    );
+                }
+
+                @Override
+                public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+                    movieData = new ArrayList<>();
+                }
+
+                @Override
+                public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+
+                }
+
+            };
+
     @Override
-    public Loader<List<MovieData>> onCreateLoader(int i, Bundle bundle) {
-
-        String url = bundle.getString("QUERY");
-
-        View loadingIndicator = findViewById(R.id.loading_indicator);
-        loadingIndicator.setVisibility(View.VISIBLE);
-
-        return new MovieLoader(this, url);
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_main, menu);
+        return true;
     }
 
-
     @Override
-    public void onLoadFinished(Loader<List<MovieData>> loader, List<MovieData> data) {
-        // Hide loading indicator because the data has been loaded
-        View loadingIndicator = findViewById(R.id.loading_indicator);
-        loadingIndicator.setVisibility(View.GONE);
-
-        // Set empty state text to display "There are no movies"
-        mEmptyStateTextView.setText(R.string.no_movies);
-        mEmptyStateTextView.setVisibility(View.VISIBLE);
-
-        if (!isOnline()) {
-            mEmptyStateTextView.setText(R.string.no_internet_connection);
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.favorites_only:
+                if (item.isChecked()) {
+                    item.setChecked(false);
+                    SHOWFAVORITES = false;
+                }
+                else {
+                    item.setChecked(true);
+                    SHOWFAVORITES = true;
+                }
+                return true;
+            case R.id.sort_by_rating:
+                if (item.isChecked()){
+                    item.setChecked(false);
+                    url = (BASEAPIURL + POPULAR + APIKEY);
+                    ORDERBY = ORDER_BY_POPULAR;
+                }
+                else {
+                    item.setChecked(true);
+                    url = (BASEAPIURL + TOPRATED + APIKEY);
+                    ORDERBY = ORDER_BY_VOTE;
+                }
+                return true;
+            case R.id.sort_by_votes:
+                if (item.isChecked()){
+                    item.setChecked(false);
+                    url = (BASEAPIURL + TOPRATED + APIKEY);
+                    ORDERBY = ORDER_BY_VOTE;
+                }
+                else{
+                    item.setChecked(true);
+                    url = (BASEAPIURL + POPULAR + APIKEY);
+                    ORDERBY = ORDER_BY_POPULAR;
+                }
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
+    }
 
-        // Clear the adapter of previous movie data
-        gridAdapter.clear();
+    private boolean showFavorites(){
+        return false;
+    }
 
-        // If there is a valid list of {@link Movies}, then add them to the adapter's
-        // data set. This will trigger the GridView to update.
-        if (data != null && !data.isEmpty()) {
-            mEmptyStateTextView.setVisibility(View.GONE);
-            gridAdapter.addAll(data);
-            gridAdapter.notifyDataSetChanged();
-        }
+    private boolean sortByRating(){
+        return false;
+    }
 
+    private boolean sortByVotes(){
+        return false;
     }
 
     @Override
-    public void onLoaderReset(Loader<List<MovieData>> loader) {
-        // Loader reset, so we can clear out our existing data.
-        gridAdapter.clear();
+    protected void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList(MOVIE_KEY, (ArrayList<? extends Parcelable>) movieData);
+        outState.putBoolean(FAVORITE_KEY, SHOWFAVORITES);
+        outState.putString(ORDER_BY_KEY, ORDERBY);
+        outState.putString(URL_KEY, url);
+        super.onSaveInstanceState(outState);
     }
+
+/*    @Override
+    protected void onStart() {
+        super.onStart();
+        if (preferencesUpdated) {
+            movieData = null;
+            if (showFavorites()) {
+                getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
+            } else {
+                if (isOnline()) {
+                    getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, movieLoaderCallbacks);
+                }
+                preferencesUpdated = false;
+            }
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        PreferenceManager.getDefaultSharedPreferences(this)
+                .unregisterOnSharedPreferenceChangeListener(this);
+    }
+
+    @Override
+    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        Preference pref = findPreference(key);
+
+        if (pref != null) {
+            updatePrefSummary(pref,sharedPreferences.getString(key, ""));
+        }
+        preferencesUpdated = true;
+    }
+
+    private void updatePrefSummary(Preference pref, String value) {
+
+    }*/
 }

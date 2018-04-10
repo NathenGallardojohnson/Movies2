@@ -10,18 +10,27 @@ public class Data {
     private String name;
     private String content = " ";
     private URL url;
-    private String type;
+    private int type;
+
+    public Data() {
+        this.name = name;
+        this.url = url;
+        this.content = content;
+        type = 0;
+    }
 
     public Data(String name, URL url) {
         this.name = name;
         this.url = url;
-        type = "videoType";
+        this.content = " ";
+        this.type = 2;
     }
 
     public Data(String name, String content) {
         this.name = name;
         this.content = content;
-        type = "reviewType";
+        this.url = null;
+        this.type = 1;
     }
 
     public String getName() {
@@ -32,24 +41,35 @@ public class Data {
         return content;
     }
 
-    //public void setName() { this.name = name; }
+    public void setName(String mName) {
+        this.name = mName;
+    }
 
-    public String getType() {
+    public void setContent(String mContent) {
+        this.content = mContent;
+    }
+
+    public int getType() {
         return type;
     }
 
-    //public void setType() { this.type = type; }
+    public void setType(int mType) {
+        this.type = mType;
+    }
 
     public URL getURL() {
         return url;
     }
 
-    //public void setUrl() { this.url = url; }
+    public void setUrl(URL mUrl) {
+        this.url = mUrl;
+    }
 
     public boolean isEmpty() {
-        if (getType() == "videoType" || getType() == "reviewType") {
+        if (getType() == 0) {
             return false;
+        } else {
+            return true;
         }
-        return true;
     }
 }

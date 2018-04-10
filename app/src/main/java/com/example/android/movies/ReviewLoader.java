@@ -9,7 +9,7 @@ import java.util.List;
  * Created by Hardkornate on 3/22/18.
  */
 
-class ReviewLoader extends AsyncTaskLoader<List<Data>> {
+class ReviewLoader extends android.support.v4.content.AsyncTaskLoader<List<Data>> {
 
     private String mUrl = "about:blank";
 

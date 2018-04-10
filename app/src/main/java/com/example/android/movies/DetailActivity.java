@@ -7,36 +7,44 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks {
     private static final int REVIEW_LOADER_ID = 2;
     private static final int VIDEOS_LOADER_ID = 3;
+    private static final int VIDEO_TYPE = 1;
+    private static final int REVIEW_TYPE = 2;
+    private static final int LIST_ITEM_TYPE_COUNT = 2;
     private final String BASEAPIURL = "http://api.themoviedb.org/3/movie/";
     private final String VIDEOS = "/videos";
     private final String REVIEWS = "/reviews";
     //API KEY REMOVED - get one at  https://www.themoviedb.org/account/signup
     private final String APIKEY = "?api_key=bf4f905b88823288bf4ac9bca4225847";
-    VideoAdapter videoAdapter;
-    ReviewAdapter reviewAdapter;
     ListView listView;
     private List<Data> reviewData = new ArrayList<>();
     private List<Data> videoData = new ArrayList<>();
     private TextView mEmptyStateTextView;
     private ImageView loadingIndicator;
+    private DataAdapter mDataAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_detail);
+        mDataAdapter = new DataAdapter();
 
         mEmptyStateTextView = findViewById(R.id.empty_view);
         loadingIndicator = findViewById(R.id.loading_indicator);
@@ -50,8 +58,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String reviewUrl = (BASEAPIURL + id + REVIEWS + APIKEY);
         String videoUrl = (BASEAPIURL + id + VIDEOS + APIKEY);
         String posterUrl = Utils.getPosterUrl(posterPath);
-        videoAdapter = new VideoAdapter(this, null);
-        reviewAdapter = new ReviewAdapter(this, null);
+      //  videoAdapter = new VideoAdapter(this, null);
+      //  reviewAdapter = new ReviewAdapter(this, null);
         listView = findViewById(R.id.list_view);
         TextView titleTextView = findViewById(R.id.title);
         titleTextView.setText(title);
@@ -76,13 +84,101 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         } else {
 
             // Clear the adapter of previous movie data
-            videoAdapter.clear();
-            reviewAdapter.clear();
+            mDataAdapter.clear();
             loadingIndicator.setVisibility(View.GONE);
             // Update empty state with no connection error message
             mEmptyStateTextView.setText(R.string.no_internet_connection);
         }
 
+
+    }
+
+    private class DataAdapter extends BaseAdapter {
+
+        private List<Data> mData = new ArrayList<>();
+        private LayoutInflater mInflater;
+
+        public DataAdapter() {
+            mInflater = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        }
+
+        protected void clear(){
+            mData.clear();
+        }
+
+        public void addAllToAdapter(List<Data> data){
+            for (int i = 0; i < data.size(); i++) {
+                Data dataItem = getItem(i);
+                String mName = dataItem.getName();
+                String mContent = dataItem.getContent();
+                int mType = dataItem.getType();
+                URL mUrl = dataItem.getURL();
+                dataItem.setName(mName);
+                dataItem.setContent(mContent);
+                dataItem.setUrl(mUrl);
+                dataItem.setType(mType);
+                mData.add(dataItem);
+            }
+
+        }
+
+        public int getItemViewType(Data data) {
+            return data.getType();
+        }
+
+        @Override
+        public int getViewTypeCount() {
+            return LIST_ITEM_TYPE_COUNT;
+        }
+
+        @Override
+        public int getCount() {
+            return mData.size();
+        }
+
+        @Override
+        public Data getItem(int position) {
+            return mData.get(position);
+        }
+
+        @Override
+        public long getItemId(int position) {
+            return position;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            ViewHolder holder = null;
+            Data data = getItem(position);
+            int type = getItemViewType(data);
+            if (convertView == null) {
+                holder = new ViewHolder();
+                switch(type) {
+                    case REVIEW_TYPE:
+                        convertView = mInflater.inflate(R.layout.review_item, parent, false);
+                        holder.nameTextView = convertView.findViewById(R.id.author_text_view);
+                        holder.contentTextView = convertView.findViewById(R.id.content_text_view);
+                        break;
+                    case VIDEO_TYPE:
+                        convertView = mInflater.inflate(R.layout.video_item, parent, false);
+                        holder.nameTextView = convertView.findViewById(R.id.name_text_view);
+                        holder.contentTextView = convertView.findViewById(R.id.key_text_view);
+                        break;
+                }
+                convertView.setTag(holder);
+            } else {
+                holder = (ViewHolder)convertView.getTag();
+            }
+            holder.nameTextView.setText(data.getName());
+            holder.contentTextView.setText(data.getContent());
+            return convertView;
+        }
+
+    }
+
+    public static class ViewHolder {
+        public TextView nameTextView;
+        public TextView contentTextView;
     }
 
     private boolean isOnline() {
@@ -130,79 +226,37 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             //mEmptyStateReviewTextView.setText(R.string.no_internet_connection);
         }
         int id = loader.getId();// find which loader you called
-        if (data != null) {
+        if (data != null ) {
             if (id == REVIEW_LOADER_ID) {
                 reviewData = (List<Data>) data;
-                // Clear the adapter of previous review data
+            } else if (id == VIDEOS_LOADER_ID) {
+                videoData = (List<Data>) data;
+            }
+            if (videoData != null && !videoData.isEmpty() && reviewData != null && !reviewData.isEmpty()) {
+                // mEmptyStateReviewTextView.setVisibility(View.GONE);
                 try {
-                    reviewAdapter.clear();
+                    reviewData.addAll(videoData);
+                    mDataAdapter.addAllToAdapter(reviewData);
+                    mDataAdapter.notifyDataSetChanged();
+                    listView.setAdapter(mDataAdapter);
                 }
                 catch (java.lang.NullPointerException exception){
                     // Catch NullPointerExceptions.
                     log(exception);
                 }
-                // If there is a valid list of {@link Reviews}, then add them to the adapter's
-                // data set. This will trigger the ListView to update.
-                if (reviewData != null && !reviewData.isEmpty()) {
-                    //mEmptyStateReviewTextView.setVisibility(View.GONE);
-                    try {
-                        reviewAdapter.addAll(reviewData);
-                        reviewAdapter.notifyDataSetChanged();
-                        listView.setAdapter(reviewAdapter);
-                    }
-                    catch (java.lang.NullPointerException exception){
-                        // Catch NullPointerExceptions.
-                        log(exception);
-                    }
-
-                }
-            } else if (id == VIDEOS_LOADER_ID) {
-                videoData = (List<Data>) data;
-                // Clear the adapter of previous video data
-                try {
-                    videoAdapter.clear();
-                }
-            catch (java.lang.NullPointerException exception){
-                // Catch NullPointerExceptions.
-                log(exception);
             }
 
-                // If there is a valid list of {@link Videos}, then add them to the adapter's
-                // data set. This will trigger the ListView to update.
-                if (videoData != null && !videoData.isEmpty()) {
-                    // mEmptyStateReviewTextView.setVisibility(View.GONE);
-                    try {
-                        videoAdapter.addAll(videoData);
-                        videoAdapter.notifyDataSetChanged();
-                        listView.setAdapter(videoAdapter);
-                    }
-                catch (java.lang.NullPointerException exception){
-                        // Catch NullPointerExceptions.
-                        log(exception);
-                    }
-                }
-            }
         }
     }
 
     @Override
     public void onLoaderReset(Loader loader) {
-        int id = loader.getId();
-        if (id == REVIEW_LOADER_ID) {
             try {
-                reviewAdapter.clear();
+                mDataAdapter.clear();
             } catch (java.lang.NullPointerException exception) {
                 // Catch NullPointerExceptions.
                 log(exception);
             }
-        } else if (id == VIDEOS_LOADER_ID) {
-            try {
-                videoAdapter.clear();
-            } catch (java.lang.NullPointerException exception) {
-                // Catch NullPointerExceptions.
-                log(exception);
-            }
-        }
     }
 
     public static void log(Object value)

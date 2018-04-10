@@ -11,4 +11,8 @@
     <string name="released">Released:</string>
     <string name="no_reviews">There are no reviews</string>
     <string name="no_videos">There are no videos</string>
+    <string name="sort_by">Sort by</string>
+    <string name="rating">Rating</string>
+    <string name="votes">Votes</string>
+    <string name="show_favorites">Show favorites</string>
 </resources>

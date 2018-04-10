@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".MainActivity">
+
+    <item
+        android:id="@+id/favorites_only"
+        android:checkable="true"
+        android:orderInCategory="100"
+        android:title="@string/show_favorites"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/sort_by"
+        android:title="@string/sort_by"
+        android:orderInCategory="80"
+        app:showAsAction="never">
+
+        <menu>
+
+            <group android:checkableBehavior="single">
+
+            <item
+                android:id="@+id/sort_by_rating"
+                android:orderInCategory="60"
+                android:title="@string/rating"
+                app:showAsAction="never" />
+
+            <item
+                android:id="@+id/sort_by_votes"
+                android:title="@string/votes"
+                android:orderInCategory="40"
+                app:showAsAction="never" />
+
+            </group>
+
+        </menu>
+
+    </item>
+
+</menu>
