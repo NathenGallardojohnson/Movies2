@@ -4,13 +4,13 @@ import android.os.Parcelable;
 import android.support.v4.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,6 +24,15 @@ import java.util.List;
 
 import static com.example.android.movies.data.MovieContract.FAVORITED;
 import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PLOT;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POPULARITY;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POSTER_PATH;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_RELEASE_DATE;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_REVIEW_QUANTITY;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TITLE;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TRAILER_QUANTITY;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_URI;
 import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITE_PROJECTION;
 import static com.example.android.movies.data.MovieContract.ORDER_BY_POPULAR;
@@ -38,7 +47,7 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
     private static final String MOVIE_KEY = "movies";
     private static final String FAVORITE_KEY = "favorite";
     private static final String ORDER_BY_KEY = "orderby";
-    private static final String URL_KEY = "url" ;
+    private static final String URL_KEY = "url";
     private List<MovieData> movieData = new ArrayList<>();
     private final String BASEAPIURL = "http://api.themoviedb.org/3/movie";
     private final String POPULAR = "/popular";
@@ -51,9 +60,6 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
     private String ORDERBY = null;
     private boolean SHOWFAVORITES = false;
     private TextView mEmptyStateTextView;
-    private static boolean preferencesUpdated = false;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,7 +67,6 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
         setContentView(R.layout.activity_main);
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
-        //Switch switchButton = findViewById(R.id.switchOne);
 
         GridView gridView = findViewById(R.id.gridView);
         mEmptyStateTextView = findViewById(R.id.empty_view);
@@ -72,61 +77,11 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
         loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
 
-/*        PreferenceManager.setDefaultValues(this, R.xml.preferences, false);
-
-        SharedPreferences sharedPref = PreferenceManager.getDefaultSharedPreferences(this);
-
-        sharedPref.registerOnSharedPreferenceChangeListener(this);*/
-
-        final LoaderManager lm = getSupportLoaderManager();
-
         if (isOnline()) {
-            // Get a reference to the LoaderManager, in order to interact with loaders
-            Bundle bundle = new Bundle();
-            bundle.putString("QUERY", url);
-            lm.initLoader(MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
-            lm.initLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
-
+            sortBy();
         } else {
-
-            // Clear the adapter of previous movie data
-            gridAdapter.clear();
-            loadingIndicator.setVisibility(View.GONE);
-            // Update empty state with no connection error message
-            mEmptyStateTextView.setText(R.string.no_internet_connection);
-            Bundle bundle = new Bundle();
-            bundle.putString(ORDER_BY_KEY, ORDERBY);
-            lm.initLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
+            showFavorites();
         }
-
-/*        switchButton.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean bChecked) {
-                if (bChecked) {
-                    Toast.makeText(getApplicationContext(),
-                            R.string.switch_popular, Toast.LENGTH_SHORT).show();
-                    url = (BASEAPIURL + POPULAR + APIKEY);
-                } else {
-                    Toast.makeText(getApplicationContext()
-                            , R.string.switch_rating, Toast.LENGTH_SHORT).show();
-                    url = (BASEAPIURL + TOPRATED + APIKEY);
-                }
-                if (isOnline()) {
-                    // Get a reference to the LoaderManager, in order to interact with loaders
-                    Bundle bundle = new Bundle();
-                    bundle.putString("QUERY", url);
-                    lm.restartLoader
-                            (MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
-                } else {
-
-                    // Clear the adapter of previous movie data
-                    gridAdapter.clear();
-                    loadingIndicator.setVisibility(View.GONE);
-                    // Update empty state with no connection error message
-                    mEmptyStateTextView.setText(R.string.no_internet_connection);
-                }
-            }
-        });*/
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
@@ -139,6 +94,8 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                 intent.putExtra("voteAverage", movieData.getVoteAverage());
                 intent.putExtra("plot", movieData.getPlot());
                 intent.putExtra("id", movieData.getId());
+                intent.putExtra("reviewQuantity", movieData.getReviewQuantity());
+                intent.putExtra("trailerQuantity", movieData.getTrailerQuantity());
 
                 //Start details activity
                 startActivity(intent);
@@ -212,8 +169,7 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
             new LoaderManager.LoaderCallbacks<Cursor>() {
 
                 @Override
-                public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle bundle)
-                {
+                public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
                     ORDERBY = bundle.getString(ORDER_BY_KEY);
                     mEmptyStateTextView.setVisibility(View.GONE);
                     return new android.support.v4.content.CursorLoader(
@@ -229,11 +185,51 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                 @Override
                 public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
                     movieData = new ArrayList<>();
+
+                    View loadingIndicator = findViewById(R.id.loading_indicator);
+                    loadingIndicator.setVisibility(View.GONE);
+
+
+                    mEmptyStateTextView.setVisibility(View.VISIBLE);
+
+                    if (data == null) {
+                        mEmptyStateTextView.setText(R.string.no_favorites);
+                    } else {
+                        loadingIndicator.setVisibility(View.GONE);
+                        data.moveToFirst();
+                        while (data.moveToNext()) {
+                            String title = data.getString(data.getColumnIndex(COLUMN_TITLE));
+                            String releaseDate = data.getString(data.getColumnIndex(COLUMN_RELEASE_DATE));
+                            String posterPath = data.getString(data.getColumnIndex(COLUMN_POSTER_PATH));
+                            String voteAverage = data.getString(data.getColumnIndex(COLUMN_VOTE_AVERAGE));
+                            String popularity = data.getString(data.getColumnIndex(COLUMN_POPULARITY));
+                            String plot = data.getString(data.getColumnIndex(COLUMN_PLOT));
+                            String id = data.getString(data.getColumnIndex(COLUMN_ID));
+                            int reviewQuantity = data.getInt(data.getColumnIndex(COLUMN_REVIEW_QUANTITY));
+                            int trailerQuantity = data.getInt(data.getColumnIndex(COLUMN_TRAILER_QUANTITY));
+
+                            movieData.add(new MovieData(title, releaseDate, posterPath, voteAverage, popularity, plot, id,
+                                    reviewQuantity, trailerQuantity));
+                        }
+                        // Clear the adapter of previous movie data
+                        gridAdapter.clear();
+
+                        // If there is a valid list of {@link Movies}, then add them to the adapter's
+                        // data set. This will trigger the GridView to update.
+                        if (movieData != null && !movieData.isEmpty()) {
+                            mEmptyStateTextView.setVisibility(View.GONE);
+                            gridAdapter.addAll(movieData);
+                            gridAdapter.notifyDataSetChanged();
+                        }
+
+                    }
+
                 }
 
                 @Override
                 public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
-
+                    // Clear the adapter of previous movie data
+                    gridAdapter.clear();
                 }
 
             };
@@ -251,33 +247,33 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
         switch (item.getItemId()) {
             case R.id.favorites_only:
                 if (item.isChecked()) {
+                    sortBy();
                     item.setChecked(false);
                     SHOWFAVORITES = false;
-                }
-                else {
+                    return true;
+                } else {
+                    showFavorites();
                     item.setChecked(true);
                     SHOWFAVORITES = true;
+                    return true;
                 }
-                return true;
             case R.id.sort_by_rating:
-                if (item.isChecked()){
+                if (item.isChecked()) {
                     item.setChecked(false);
                     url = (BASEAPIURL + POPULAR + APIKEY);
                     ORDERBY = ORDER_BY_POPULAR;
-                }
-                else {
+                } else {
                     item.setChecked(true);
                     url = (BASEAPIURL + TOPRATED + APIKEY);
                     ORDERBY = ORDER_BY_VOTE;
                 }
                 return true;
             case R.id.sort_by_votes:
-                if (item.isChecked()){
+                if (item.isChecked()) {
                     item.setChecked(false);
                     url = (BASEAPIURL + TOPRATED + APIKEY);
                     ORDERBY = ORDER_BY_VOTE;
-                }
-                else{
+                } else {
                     item.setChecked(true);
                     url = (BASEAPIURL + POPULAR + APIKEY);
                     ORDERBY = ORDER_BY_POPULAR;
@@ -288,17 +284,41 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
         }
     }
 
-    private boolean showFavorites(){
-        return false;
+    private boolean showFavorites() {
+        if (isOnline()) {
+            Bundle bundle = new Bundle();
+            bundle.putString(ORDER_BY_KEY, ORDERBY);
+            getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
+            getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
+            return true;
+        } else {
+            // Clear the adapter of previous movie data
+            gridAdapter.clear();
+            loadingIndicator.setVisibility(View.GONE);
+            // Update empty state with no connection error message
+            mEmptyStateTextView.setText(R.string.no_internet_connection);
+            return false;
+        }
     }
 
-    private boolean sortByRating(){
-        return false;
+    private boolean sortBy() {
+        if (isOnline()) {
+            // Get a reference to the LoaderManager, in order to interact with loaders
+            Bundle bundle = new Bundle();
+            bundle.putString("QUERY", url);
+            getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
+            getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
+            return true;
+        } else {
+            // Clear the adapter of previous movie data
+            gridAdapter.clear();
+            loadingIndicator.setVisibility(View.GONE);
+            // Update empty state with no connection error message
+            mEmptyStateTextView.setText(R.string.no_internet_connection);
+            return false;
+        }
     }
 
-    private boolean sortByVotes(){
-        return false;
-    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -308,41 +328,4 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
         outState.putString(URL_KEY, url);
         super.onSaveInstanceState(outState);
     }
-
-/*    @Override
-    protected void onStart() {
-        super.onStart();
-        if (preferencesUpdated) {
-            movieData = null;
-            if (showFavorites()) {
-                getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
-            } else {
-                if (isOnline()) {
-                    getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, null, movieLoaderCallbacks);
-                }
-                preferencesUpdated = false;
-            }
-        }
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        PreferenceManager.getDefaultSharedPreferences(this)
-                .unregisterOnSharedPreferenceChangeListener(this);
-    }
-
-    @Override
-    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
-        Preference pref = findPreference(key);
-
-        if (pref != null) {
-            updatePrefSummary(pref,sharedPreferences.getString(key, ""));
-        }
-        preferencesUpdated = true;
-    }
-
-    private void updatePrefSummary(Preference pref, String value) {
-
-    }*/
 }

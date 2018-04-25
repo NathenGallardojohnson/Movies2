@@ -12,6 +12,7 @@ import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import static com.example.android.movies.data.MovieContract.FAVORITED;
 import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
@@ -26,7 +27,6 @@ import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_F
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_MOVIES_TYPE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_MOVIE_TYPE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.DETAIL_PROJECTION;
-import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITE_PROJECTION;
 import static com.example.android.movies.data.MovieContract.MovieEntry.TABLE_NAME;
 import static com.example.android.movies.data.MovieContract.MovieEntry._ID;

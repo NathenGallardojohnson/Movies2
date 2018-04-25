@@ -66,10 +66,6 @@ public class Data {
     }
 
     public boolean isEmpty() {
-        if (getType() == 0) {
-            return false;
-        } else {
-            return true;
-        }
+        return getType() != 0;
     }
 }

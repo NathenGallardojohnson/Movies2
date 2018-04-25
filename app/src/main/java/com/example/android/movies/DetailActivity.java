@@ -1,13 +1,11 @@
 package com.example.android.movies;
 
-import android.app.LoaderManager;
 import android.content.Context;
-import android.content.Loader;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,9 +20,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DetailActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks {
-    private static final int REVIEW_LOADER_ID = 2;
-    private static final int VIDEOS_LOADER_ID = 3;
+public class DetailActivity extends AppCompatActivity implements android.support.v4.app.LoaderManager.LoaderCallbacks {
+    private static final int REVIEW_LOADER_ID = 3;
+    private static final int VIDEOS_LOADER_ID = 4;
     private static final int VIDEO_TYPE = 1;
     private static final int REVIEW_TYPE = 2;
     private static final int LIST_ITEM_TYPE_COUNT = 2;
@@ -55,6 +53,8 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
         String voteAverage = getIntent().getStringExtra("voteAverage");
         String plot = getIntent().getStringExtra("plot");
         String id = getIntent().getStringExtra("id");
+        int reviewQuantity = getIntent().getIntExtra("reviewQuantity", 0);
+        int trailerQuantity = getIntent().getIntExtra("trailerQuantity", 0);
         String reviewUrl = (BASEAPIURL + id + REVIEWS + APIKEY);
         String videoUrl = (BASEAPIURL + id + VIDEOS + APIKEY);
         String posterUrl = Utils.getPosterUrl(posterPath);
@@ -77,10 +77,10 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
             reviewBundle.putString("QUERY", reviewUrl);
             Bundle videoBundle = new Bundle();
             videoBundle.putString("QUERY", videoUrl);
-            getLoaderManager().initLoader(REVIEW_LOADER_ID, reviewBundle, this);
-            getLoaderManager().initLoader(VIDEOS_LOADER_ID, videoBundle, this);
-            getLoaderManager().restartLoader(REVIEW_LOADER_ID, reviewBundle, this);
-            getLoaderManager().restartLoader(VIDEOS_LOADER_ID, videoBundle, this);
+            getSupportLoaderManager().initLoader(REVIEW_LOADER_ID, reviewBundle, this );
+            getSupportLoaderManager().initLoader(VIDEOS_LOADER_ID, videoBundle, this);
+            getSupportLoaderManager().restartLoader(REVIEW_LOADER_ID, reviewBundle, this);
+            getSupportLoaderManager().restartLoader(VIDEOS_LOADER_ID, videoBundle, this);
         } else {
 
             // Clear the adapter of previous movie data
@@ -193,7 +193,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     @Override
-    public Loader onCreateLoader(int id, Bundle bundle) {
+    public android.support.v4.content.Loader onCreateLoader(int id, Bundle bundle) {
         String url = bundle.getString("QUERY");
 
 
@@ -209,7 +209,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     @Override
-    public void onLoadFinished(Loader loader, Object data) {
+    public void onLoadFinished(@NonNull android.support.v4.content.Loader loader, Object data) {
         // Hide loading indicator because the data has been loaded
         //loadingIndicator.setVisibility(View.GONE);
 
@@ -250,7 +250,7 @@ public class DetailActivity extends AppCompatActivity implements LoaderManager.L
     }
 
     @Override
-    public void onLoaderReset(Loader loader) {
+    public void onLoaderReset(@NonNull android.support.v4.content.Loader loader) {
             try {
                 mDataAdapter.clear();
             } catch (java.lang.NullPointerException exception) {

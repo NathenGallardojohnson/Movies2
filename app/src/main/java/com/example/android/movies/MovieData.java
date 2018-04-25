@@ -86,6 +86,14 @@ public class MovieData implements Parcelable{
         return mId;
     }
 
+    public int getReviewQuantity() {
+        return mReviewQuantity;
+    }
+
+    public int getTrailerQuantity() {
+        return mTrailerQuantity;
+    }
+
     @Override
     public int describeContents() {
         return 0;

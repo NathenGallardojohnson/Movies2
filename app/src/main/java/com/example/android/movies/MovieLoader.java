@@ -1,6 +1,5 @@
 package com.example.android.movies;
 
-import android.content.AsyncTaskLoader;
 import android.content.Context;
 
 import java.util.List;

@@ -28,7 +28,8 @@ class Utils {
      * Tag for the log messages
      */
     private static final String LOG_TAG = Utils.class.getSimpleName();
-    private static int reviewLength;
+    private static int reviewLength = 0;
+    private static int trailerLength = 0;
 
     private Utils() {
     }
@@ -202,6 +203,9 @@ class Utils {
                 // Extract the value for the key called "vote_average"
                 String voteAverage = currentMovie.getString("vote_average");
 
+                // Extract the value for the key called "vote_average"
+                String popularity = currentMovie.getString("popularity");
+
                 // Extract the value for the key called "overview"
                 String plot = currentMovie.getString("overview");
 
@@ -211,9 +215,15 @@ class Utils {
                 // Remove backslashes from the poster url
                 posterPath = posterPath.replaceAll("\\\\", "");
 
+                //Get number of reviews
+
+                //Get number of trailers
+
                 // Create a new {@link MovieData} object with the title, release date, poster url, vote average, plot synopsis, and movie ID
                 // from the JSON response.
-                MovieData mMovie = new MovieData(title, releaseDate, posterPath, voteAverage, plot, id);
+                MovieData mMovie = new MovieData(title, releaseDate, posterPath, voteAverage,
+                        popularity, plot, id,
+                reviewLength, trailerLength);
 
                 // Add the new {@link MovieData} to the list of movies.
                 movieData.add(mMovie);
@@ -256,7 +266,7 @@ class Utils {
             JSONArray resultsArray = baseJsonResponse.getJSONArray("results");
             reviewLength = resultsArray.length();
             // For each movie in the results, create an {@link Data} object
-            for (int i = 0; i < resultsArray.length(); i++) {
+            for (int i = 0; i < reviewLength; i++) {
 
                 // Get a single article at position i within the list of movies
                 JSONObject currentReview = resultsArray.getJSONObject(i);
@@ -312,16 +322,11 @@ class Utils {
             // Extract the JSONArray associated with the key called "results",
             // which represents a list of items (or videos).
             JSONArray resultsArray = baseJsonResponse.getJSONArray("results");
+            trailerLength = resultsArray.length();
             // For each video in the results, create an {@link MovieData} object
-            for (int i = reviewLength; i < (resultsArray.length() + reviewLength); i++) {
-                if (i < reviewLength) {
-                    //Create a blank Review Data item to act as a placeholder until the ReviewData
-                    //and VideoData can be merged
-                    Data mBlank = new Data(" ", " ");
-                    videoData.add(mBlank);
-                } else {
+            for (int i = 0; i < trailerLength; i++) {
                     // Get a single article at position i within the list of videos
-                    JSONObject currentVideo = resultsArray.getJSONObject(i - reviewLength);
+                    JSONObject currentVideo = resultsArray.getJSONObject(i);
 
                     // Extract the value for the key called "key"
                     String key = currentVideo.getString("key");
@@ -341,7 +346,6 @@ class Utils {
                     videoData.add(mVideo);
                 }
 
-            }
         } catch (JSONException e) {
             // If an error is thrown when executing any of the above statements in the "try" block,
             // catch the exception here, so the app doesn't crash. Print a log message
