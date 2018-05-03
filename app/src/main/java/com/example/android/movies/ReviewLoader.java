@@ -1,6 +1,5 @@
 package com.example.android.movies;
 
-import android.content.AsyncTaskLoader;
 import android.content.Context;
 
 import java.util.List;
@@ -9,11 +8,11 @@ import java.util.List;
  * Created by Hardkornate on 3/22/18.
  */
 
-class ReviewLoader extends android.support.v4.content.AsyncTaskLoader<List<Data>> {
+class ReviewLoader extends android.support.v4.content.AsyncTaskLoader<List<Review>> {
 
-    private String mUrl = "about:blank";
+    private String mUrl;
 
-    public ReviewLoader(Context context, String url) {
+    ReviewLoader(Context context, String url) {
         super(context);
         mUrl = url;
     }
@@ -24,7 +23,7 @@ class ReviewLoader extends android.support.v4.content.AsyncTaskLoader<List<Data>
     }
 
     @Override
-    public List<Data> loadInBackground() {
+    public List<Review> loadInBackground() {
         if (mUrl == null) {
             return null;
         }

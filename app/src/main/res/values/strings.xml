@@ -16,4 +16,9 @@
     <string name="votes">Votes</string>
     <string name="show_favorites">Show favorites</string>
     <string name="no_favorites">There are no favorites to display</string>
+    <string name="reviews">REVIEWS</string>
+    <string name="trailers">TRAILERS</string>
+    <string name="review_label">Reviews</string>
+    <string name="favorites_button">favorites button</string>
+    <string name="divider">divider</string>
 </resources>

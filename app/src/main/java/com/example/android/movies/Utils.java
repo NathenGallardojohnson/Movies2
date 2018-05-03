@@ -19,14 +19,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-/**
- * Created by Hardkornate on 2/3/18.
- */
-
 class Utils {
-    /**
-     * Tag for the log messages
-     */
+
     private static final String LOG_TAG = Utils.class.getSimpleName();
     private static int reviewLength = 0;
     private static int trailerLength = 0;
@@ -51,7 +45,7 @@ class Utils {
         return extractFeatureFromJson(jsonResponse);
     }
 
-    static List<Data> getReviews(String requestUrl) {
+    static List<Review> getReviews(String requestUrl) {
 
         // Create URL object
         URL url = createUrl(requestUrl);
@@ -68,7 +62,7 @@ class Utils {
         return extractFeatureFromReviewJson(jsonResponse);
     }
 
-    static List<Data> getVideos(String requestUrl) {
+    static List<Trailer> getVideos(String requestUrl) {
 
         // Create URL object
         URL url = createUrl(requestUrl);
@@ -215,15 +209,10 @@ class Utils {
                 // Remove backslashes from the poster url
                 posterPath = posterPath.replaceAll("\\\\", "");
 
-                //Get number of reviews
-
-                //Get number of trailers
-
                 // Create a new {@link MovieData} object with the title, release date, poster url, vote average, plot synopsis, and movie ID
                 // from the JSON response.
                 MovieData mMovie = new MovieData(title, releaseDate, posterPath, voteAverage,
-                        popularity, plot, id,
-                reviewLength, trailerLength);
+                        popularity, plot, id);
 
                 // Add the new {@link MovieData} to the list of movies.
                 movieData.add(mMovie);
@@ -241,17 +230,17 @@ class Utils {
     }
 
     /**
-     * Return a list of {@link Data} objects that has been built up from
+     * Return a list of {@link Review} objects that has been built up from
      * parsing the given JSON response.
      */
-    private static List<Data> extractFeatureFromReviewJson(String reviewJSON) {
+    private static List<Review> extractFeatureFromReviewJson(String reviewJSON) {
         // If the JSON string is empty or null, then return early.
         if (TextUtils.isEmpty(reviewJSON)) {
             return null;
         }
 
         // Create an empty ArrayList that we can start adding reviews to
-        List<Data> reviewData = new ArrayList<>();
+        List<Review> reviewData = new ArrayList<>();
 
         // Try to parse the JSON response string. If there's a problem with the way the JSON
         // is formatted, a JSONException exception object will be thrown.
@@ -265,7 +254,7 @@ class Utils {
             // which represents a list of items (or movies).
             JSONArray resultsArray = baseJsonResponse.getJSONArray("results");
             reviewLength = resultsArray.length();
-            // For each movie in the results, create an {@link Data} object
+            // For each movie in the results, create a {@link Review} object
             for (int i = 0; i < reviewLength; i++) {
 
                 // Get a single article at position i within the list of movies
@@ -282,7 +271,7 @@ class Utils {
 
                 // Create a new {@link Data} object with the author and content
                 // from the JSON response.
-                Data mReview = new Data(author, content);
+                Review mReview = new Review(author, content);
 
                 // Add the new {@link MovieData} to the list of reviews.
                 reviewData.add(mReview);
@@ -299,17 +288,17 @@ class Utils {
     }
 
     /**
-     * Return a list of {@link Data} objects that has been built up from
+     * Return a list of {@link Trailer} objects that has been built up from
      * parsing the given JSON response.
      */
-    private static List<Data> extractFeatureFromVideoJson(String videoJSON) {
+    private static List<Trailer> extractFeatureFromVideoJson(String videoJSON) {
         // If the JSON string is empty or null, then return early.
         if (TextUtils.isEmpty(videoJSON)) {
             return null;
         }
 
         // Create an empty ArrayList that we can start adding videos to
-        List<Data> videoData = new ArrayList<>();
+        List<Trailer> videoData = new ArrayList<>();
 
         // Try to parse the JSON response string. If there's a problem with the way the JSON
         // is formatted, a JSONException exception object will be thrown.
@@ -333,14 +322,13 @@ class Utils {
 
                     // Build the video URL
                     String urlString = ("http://www.youtube.com/watch?v=" + key);
-                    URL mUrl = createUrl(urlString);
 
                     // Extract the value for the key called "name"
                     String name = currentVideo.getString("name");
 
                     // Create a new {@link Data} object with the name and url
                     // from the JSON response.
-                    Data mVideo = new Data(name, mUrl);
+                Trailer mVideo = new Trailer(name, urlString);
 
                     // Add the new {@link MovieData} to the list of movies.
                     videoData.add(mVideo);

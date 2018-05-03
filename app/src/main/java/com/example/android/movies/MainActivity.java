@@ -1,16 +1,16 @@
 package com.example.android.movies;
 
-import android.os.Parcelable;
-import android.support.v4.app.LoaderManager;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
+import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -29,9 +29,7 @@ import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PL
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POPULARITY;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POSTER_PATH;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_RELEASE_DATE;
-import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_REVIEW_QUANTITY;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TITLE;
-import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TRAILER_QUANTITY;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_URI;
 import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITE_PROJECTION;
@@ -94,8 +92,6 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                 intent.putExtra("voteAverage", movieData.getVoteAverage());
                 intent.putExtra("plot", movieData.getPlot());
                 intent.putExtra("id", movieData.getId());
-                intent.putExtra("reviewQuantity", movieData.getReviewQuantity());
-                intent.putExtra("trailerQuantity", movieData.getTrailerQuantity());
 
                 //Start details activity
                 startActivity(intent);
@@ -132,7 +128,7 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                 }
 
                 @Override
-                public void onLoadFinished(android.support.v4.content.Loader<List<MovieData>> loader, List<MovieData> data) {
+                public void onLoadFinished(@NonNull android.support.v4.content.Loader<List<MovieData>> loader, List<MovieData> data) {
                     // Hide loading indicator because the data has been loaded
                     View loadingIndicator = findViewById(R.id.loading_indicator);
                     loadingIndicator.setVisibility(View.GONE);
@@ -158,7 +154,7 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                 }
 
                 @Override
-                public void onLoaderReset(android.support.v4.content.Loader<List<MovieData>> loader) {
+                public void onLoaderReset(@NonNull android.support.v4.content.Loader<List<MovieData>> loader) {
                     // Loader reset, so we can clear out our existing data.
                     gridAdapter.clear();
                 }
@@ -183,7 +179,7 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                 }
 
                 @Override
-                public void onLoadFinished(android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+                public void onLoadFinished(@NonNull android.support.v4.content.Loader<Cursor> loader, Cursor data) {
                     movieData = new ArrayList<>();
 
                     View loadingIndicator = findViewById(R.id.loading_indicator);
@@ -205,11 +201,8 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                             String popularity = data.getString(data.getColumnIndex(COLUMN_POPULARITY));
                             String plot = data.getString(data.getColumnIndex(COLUMN_PLOT));
                             String id = data.getString(data.getColumnIndex(COLUMN_ID));
-                            int reviewQuantity = data.getInt(data.getColumnIndex(COLUMN_REVIEW_QUANTITY));
-                            int trailerQuantity = data.getInt(data.getColumnIndex(COLUMN_TRAILER_QUANTITY));
 
-                            movieData.add(new MovieData(title, releaseDate, posterPath, voteAverage, popularity, plot, id,
-                                    reviewQuantity, trailerQuantity));
+                            movieData.add(new MovieData(title, releaseDate, posterPath, voteAverage, popularity, plot, id));
                         }
                         // Clear the adapter of previous movie data
                         gridAdapter.clear();
@@ -227,7 +220,7 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
                 }
 
                 @Override
-                public void onLoaderReset(android.support.v4.content.Loader<Cursor> loader) {
+                public void onLoaderReset(@NonNull android.support.v4.content.Loader<Cursor> loader) {
                     // Clear the adapter of previous movie data
                     gridAdapter.clear();
                 }

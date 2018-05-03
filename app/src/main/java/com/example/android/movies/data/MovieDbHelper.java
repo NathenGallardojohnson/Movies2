@@ -4,15 +4,16 @@ package com.example.android.movies.data;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+
 import com.example.android.movies.data.MovieContract.MovieEntry;
 
 public class MovieDbHelper extends SQLiteOpenHelper {
 
 
-    public static final String DATABASE_NAME = "movie.db";
+    private static final String DATABASE_NAME = "movie.db";
     private static final int DATABASE_VERSION = 1;
-    
-    public MovieDbHelper(Context context) {
+
+    MovieDbHelper(Context context) {
 
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
 
@@ -33,8 +34,6 @@ public class MovieDbHelper extends SQLiteOpenHelper {
                         MovieEntry.COLUMN_VOTE_AVERAGE + " STRING, " +
                         MovieEntry.COLUMN_POPULARITY + " STRING, " +
                         MovieEntry.COLUMN_PLOT + " STRING, " +
-                        MovieEntry.COLUMN_REVIEW_QUANTITY + " INTEGER, " +
-                        MovieEntry.COLUMN_TRAILER_QUANTITY + " INTEGER," +
                         " UNIQUE (" + MovieEntry.COLUMN_ID + ") ON CONFLICT REPLACE);";
 
         db.execSQL(SQL_CREATE_MOVIE_TABLE);

@@ -116,7 +116,7 @@
             android:layout_toEndOf="@+id/image"
             android:layout_toRightOf="@+id/image"
             android:background="@android:drawable/btn_star_big_off"
-            android:contentDescription="favorites button"
+            android:contentDescription="@string/favorites_button"
             android:minWidth="96dp"
             android:padding="6dp"
             android:textAlignment="center" />
@@ -150,20 +150,8 @@
             android:layout_below="@+id/plot"
             android:background="@android:drawable/divider_horizontal_dark"
             android:baselineAlignBottom="false"
-            android:contentDescription="divider"
+            android:contentDescription="@string/divider"
             android:elevation="6dp" />
-
-        <TextView
-            android:id="@+id/trailers_label"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/divider"
-            android:layout_margin="8dp"
-            android:text="Trailers:"
-            android:textAlignment="textStart"
-            android:textColor="@color/colorPrimaryDark"
-            android:textSize="14sp" />
-
 
 
     </RelativeLayout>

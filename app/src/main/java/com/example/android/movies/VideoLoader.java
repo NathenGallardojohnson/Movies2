@@ -4,13 +4,9 @@ import android.content.Context;
 
 import java.util.List;
 
-/**
- * Created by Hardkornate on 3/22/18.
- */
+class VideoLoader extends android.support.v4.content.AsyncTaskLoader<List<Trailer>> {
 
-class VideoLoader extends android.support.v4.content.AsyncTaskLoader<List<Data>> {
-
-    private String mUrl = "about:blank";
+    private String mUrl;
 
     public VideoLoader(Context context, String url) {
         super(context);
@@ -23,7 +19,7 @@ class VideoLoader extends android.support.v4.content.AsyncTaskLoader<List<Data>>
     }
 
     @Override
-    public List<Data> loadInBackground() {
+    public List<Trailer> loadInBackground() {
         if (mUrl == null) {
             return null;
         }
