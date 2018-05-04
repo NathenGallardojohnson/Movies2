@@ -41,11 +41,20 @@
                 android:value=".DetailActivity" />
         </activity>
 
+        <activity
+            android:name=".TrailerActivity"
+            android:label="@string/trailer_label"
+            android:parentActivityName=".DetailActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".DetailActivity" />
+        </activity>
+
         <provider
             android:name=".data.MovieProvider"
             android:authorities="com.example.android.movies.provider"
             android:enabled="true"
-            android:exported="true" />
+            android:exported="false" />
 
     </application>
 
