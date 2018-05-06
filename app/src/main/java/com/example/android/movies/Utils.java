@@ -320,15 +320,12 @@ class Utils {
                     // Extract the value for the key called "key"
                     String key = currentVideo.getString("key");
 
-                    // Build the video URL
-                    String urlString = ("http://www.youtube.com/watch?v=" + key);
-
                     // Extract the value for the key called "name"
                     String name = currentVideo.getString("name");
 
-                    // Create a new {@link Data} object with the name and url
+                // Create a new {@link Data} object with the name and key
                     // from the JSON response.
-                Trailer mVideo = new Trailer(name, urlString);
+                Trailer mVideo = new Trailer(name, key);
 
                     // Add the new {@link MovieData} to the list of movies.
                     videoData.add(mVideo);

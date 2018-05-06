@@ -36,7 +36,7 @@ import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITE_
 import static com.example.android.movies.data.MovieContract.ORDER_BY_POPULAR;
 import static com.example.android.movies.data.MovieContract.ORDER_BY_VOTE;
 
-public class MainActivity extends AppCompatActivity /*implements SharedPreferences.OnSharedPreferenceChangeListener*/ {
+public class MainActivity extends AppCompatActivity {
 
     private final String LOG_TAG = MainActivity.class.getSimpleName();
 
@@ -51,10 +51,10 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
     private final String POPULAR = "/popular";
     private final String TOPRATED = "/top_rated";
     //API KEY REMOVED - get one at https://www.themoviedb.org/account/signup
-    private final String APIKEY = ("?api_key=" + getString(R.string.movie_api_key));
+    private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
     private GridViewAdapter gridAdapter;
     private View loadingIndicator;
-    private String url = (BASEAPIURL + POPULAR + APIKEY);
+    private String url = (BASEAPIURL + POPULAR + API_KEY);
     private String ORDERBY = null;
     private boolean SHOWFAVORITES = false;
     private TextView mEmptyStateTextView;
@@ -253,22 +253,22 @@ public class MainActivity extends AppCompatActivity /*implements SharedPreferenc
             case R.id.sort_by_rating:
                 if (item.isChecked()) {
                     item.setChecked(false);
-                    url = (BASEAPIURL + POPULAR + APIKEY);
+                    url = (BASEAPIURL + POPULAR + API_KEY);
                     ORDERBY = ORDER_BY_POPULAR;
                 } else {
                     item.setChecked(true);
-                    url = (BASEAPIURL + TOPRATED + APIKEY);
+                    url = (BASEAPIURL + TOPRATED + API_KEY);
                     ORDERBY = ORDER_BY_VOTE;
                 }
                 return true;
             case R.id.sort_by_votes:
                 if (item.isChecked()) {
                     item.setChecked(false);
-                    url = (BASEAPIURL + TOPRATED + APIKEY);
+                    url = (BASEAPIURL + TOPRATED + API_KEY);
                     ORDERBY = ORDER_BY_VOTE;
                 } else {
                     item.setChecked(true);
-                    url = (BASEAPIURL + POPULAR + APIKEY);
+                    url = (BASEAPIURL + POPULAR + API_KEY);
                     ORDERBY = ORDER_BY_POPULAR;
                 }
                 return true;

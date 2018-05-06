@@ -48,9 +48,6 @@ public class ReviewActivity extends AppCompatActivity {
                         mEmptyStateTextView.setText(R.string.no_internet_connection);
                     }
 
-                    // Clear the adapter of previous movie data
-                    //reviewAdapter.clear();
-
                     // If there is a valid list of {@link Review}, then add them to the adapter's
                     // data set. This will trigger the ListView to update.
                     if (data != null && !data.isEmpty()) {

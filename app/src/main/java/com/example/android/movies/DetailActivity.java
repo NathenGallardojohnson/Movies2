@@ -15,11 +15,11 @@ import android.widget.TextView;
 import com.squareup.picasso.Picasso;
 
 public class DetailActivity extends AppCompatActivity {
-    private final String BASEAPIURL = "http://api.themoviedb.org/3/movie/";
+    private final String BASE_API_URL = "http://api.themoviedb.org/3/movie/";
     private final String VIDEOS = "/videos";
     private final String REVIEWS = "/reviews";
     //API KEY REMOVED - get one at  https://www.themoviedb.org/account/signup
-    private final String APIKEY = "?api_key=bf4f905b88823288bf4ac9bca4225847";
+    private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
     ListView listView;
     private TextView mEmptyStateTextView;
     private ImageView loadingIndicator;
@@ -38,8 +38,8 @@ public class DetailActivity extends AppCompatActivity {
         String voteAverage = getIntent().getStringExtra("voteAverage");
         String plot = getIntent().getStringExtra("plot");
         String id = getIntent().getStringExtra("id");
-        final String reviewUrl = (BASEAPIURL + id + REVIEWS + APIKEY);
-        final String trailerUrl = (BASEAPIURL + id + VIDEOS + APIKEY);
+        final String reviewUrl = (BASE_API_URL + id + REVIEWS + API_KEY);
+        final String trailerUrl = (BASE_API_URL + id + VIDEOS + API_KEY);
         String posterUrl = Utils.getPosterUrl(posterPath);
         TextView titleTextView = findViewById(R.id.title);
         titleTextView.setText(title);
@@ -70,7 +70,7 @@ public class DetailActivity extends AppCompatActivity {
             }
         });
 
-/*        Button trailerButton = findViewById(R.id.trailer_button);
+        Button trailerButton = findViewById(R.id.trailer_button);
         trailerButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -86,27 +86,7 @@ public class DetailActivity extends AppCompatActivity {
                     mEmptyStateTextView.setText(R.string.no_internet_connection);
                 }
             }
-        });*/
-/*        if (isOnline()) {
-            // Get a reference to the LoaderManager, in order to interact with loaders
-            Bundle reviewBundle = new Bundle();
-            reviewBundle.putString("QUERY", reviewUrl);
-            Bundle videoBundle = new Bundle();
-            videoBundle.putString("QUERY", videoUrl);
-            getSupportLoaderManager().initLoader(REVIEW_LOADER_ID, reviewBundle, this );
-            getSupportLoaderManager().initLoader(VIDEOS_LOADER_ID, videoBundle, this);
-            getSupportLoaderManager().restartLoader(REVIEW_LOADER_ID, reviewBundle, this);
-            getSupportLoaderManager().restartLoader(VIDEOS_LOADER_ID, videoBundle, this);
-        } else {
-
-            // Clear the adapter of previous movie data
-            mDataAdapter.clear();
-            loadingIndicator.setVisibility(View.GONE);
-            // Update empty state with no connection error message
-            mEmptyStateTextView.setText(R.string.no_internet_connection);
-        }*/
-
-
+        });
     }
 
     private boolean isOnline() {
