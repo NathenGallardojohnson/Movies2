@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -9,35 +10,68 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
-    <include layout="@layout/detail_card" />
+        <include layout="@layout/detail_card" />
 
-        <Button
-            android:id="@+id/review_button"
+        <TextView
+            android:id="@+id/empty_view"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="click for reviews of this movie"
-            android:gravity="center_horizontal"
-            android:text="@string/reviews"
-            android:textAppearance="@style/TextAppearance.AppCompat.Button" />
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/progressBarSize"
+            android:background="@android:color/transparent"
+            android:padding="@dimen/progressBarSize"
+            android:text=""
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large.Inverse"
+            android:visibility="gone"
+            tools:text="@string/empty_text_view" />
 
-        <Button
-            android:id="@+id/trailer_button"
-            android:layout_width="wrap_content"
+        <ProgressBar
+            android:id="@+id/loading_indicator"
+            style="@style/infinite_progress_horizontal"
+            android:contentDescription="@string/loading_indicator"
+            android:visibility="visible" />
+
+        <LinearLayout
+            android:id="@+id/button_bar"
+            style="?android:attr/buttonBarStyle"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:contentDescription="click for movie trailers"
-            android:gravity="center_horizontal"
-            android:text="@string/trailers"
-            android:textAppearance="@style/TextAppearance.AppCompat.Button" />
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal"
+            android:paddingEnd="@dimen/buttonBarPadding"
+            android:paddingStart="@dimen/buttonBarPadding">
 
-    <TextView
-        android:id="@+id/empty_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/review_button"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/buttonBarPadding"
+                android:layout_weight="1"
+                android:contentDescription="@string/review_button_description"
+                android:elevation="6dp"
+                android:padding="@dimen/buttonBarButtonPadding"
+                android:text="@string/reviews"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Button" />
 
-    <ImageView
-        android:id="@+id/loading_indicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/trailer_button"
+                style="?android:attr/buttonBarButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/buttonBarPadding"
+                android:layout_weight="1"
+                android:contentDescription="@string/trailer_button_description"
+                android:elevation="6dp"
+                android:padding="@dimen/buttonBarButtonPadding"
+                android:text="@string/trailers"
+                android:textAlignment="center"
+                android:textAppearance="@style/TextAppearance.AppCompat.Button" />
+        </LinearLayout>
+
     </LinearLayout>
+
 </ScrollView>
 

@@ -1,37 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="@color/colorPrimaryDark"
+    android:layout_gravity="center_vertical"
+    android:background="@android:color/background_dark"
     tools:context="com.example.android.movies.MainActivity">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/my_toolbar"
         android:layout_width="match_parent"
-        android:layout_height="?attr/actionBarSize"
-        android:background="?attr/colorPrimary"
+        android:layout_height="@dimen/toolbarHeight"
+        android:background="@color/colorPrimaryDark"
         android:elevation="4dp"
+        android:minHeight="56dp"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
-        app:popupTheme="@style/ThemeOverlay.AppCompat.Light"/>
-
-    <Switch
-        android:id="@+id/switchOne"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:hapticFeedbackEnabled="true"
-        android:text="@string/popularity_vs_ratings"
-        android:textAlignment="center"
-        android:textColor="@android:color/white"
-        android:textStyle="bold" />
+        app:popupTheme="@style/ThemeOverlay.AppCompat.Light" />
 
     <GridView
         android:id="@+id/gridView"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/switchOne"
+        android:layout_below="@+id/my_toolbar"
+        android:background="@android:color/transparent"
         android:clickable="true"
         android:columnWidth="100dp"
         android:drawSelectorOnTop="true"
@@ -44,18 +36,30 @@
         android:id="@+id/empty_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@id/loading_indicator"
         android:layout_centerInParent="true"
+        android:layout_margin="@dimen/progressBarSize"
+        android:background="@android:color/transparent"
+        android:padding="@dimen/progressBarSize"
         android:text=""
         android:textAlignment="center"
-        android:textAppearance="?android:textAppearanceLargeInverse" />
+        android:textAppearance="?android:textAppearanceLargeInverse"
+        tools:text="@string/empty_text_view" />
 
     <ProgressBar
+        style="@style/infinite_progress_horizontal"
         android:id="@+id/loading_indicator"
-        style="@style/Widget.AppCompat.ProgressBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true" />
+        android:layout_centerInParent="true"
+        android:layout_margin="@dimen/progressBarSize"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/loading_indicator"
+        android:max="@android:integer/status_bar_notification_info_maxnum"
+        android:padding="@dimen/progressBarSize"
+        android:progress="@android:integer/config_shortAnimTime"
+        android:progressDrawable="@android:drawable/progress_horizontal"
+        android:progressTint="@android:color/holo_orange_dark"
+        android:visibility="visible" />
 
 
 </RelativeLayout>

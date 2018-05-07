@@ -26,8 +26,8 @@ public class ImageWallView extends ViewGroup {
     private final int imageWidth;
     private final int interImagePadding;
 
-    private ImageView[] images;
-    private List<Integer> unInitializedImages;
+    protected ImageView[] images;
+    protected List<Integer> unInitializedImages;
 
     private int numberOfColumns;
     private int numberOfRows;
@@ -43,6 +43,19 @@ public class ImageWallView extends ViewGroup {
         this.images = new ImageView[0];
         this.unInitializedImages = new ArrayList<Integer>();
     }
+
+/*    public ImageWallView(Context context, AttributeSet attrs, ImageView[] images, int defStyleAttr) {
+        super(context, attrs, defStyleAttr);
+        this.context = context;
+        this.images = images;
+        random = new Random();
+
+        this.imageWidth = attrs.g;
+        this.imageHeight = imageHeight;
+        this.interImagePadding = interImagePadding;
+        this.images = new ImageView[0];
+        this.unInitializedImages = new ArrayList<Integer>();
+    }*/
 
     @Override
     protected void onSizeChanged(int width, int height, int oldWidth, int oldHeight) {
@@ -104,7 +117,7 @@ public class ImageWallView extends ViewGroup {
         return images[getElementIdx(col, row)].getTop();
     }
 
-    private int getElementIdx(int col, int row) {
+    protected int getElementIdx(int col, int row) {
         return (col * numberOfRows) + row;
     }
 

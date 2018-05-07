@@ -26,4 +26,8 @@
     <string name="error_thumbnail_view">There was an error initializing the YouTubeThumbnailView (%1$s)</string>
     <string name="chromeless">Chromeless</string>
     <string name="no_trailers">There are no trailers for this movie</string>
+    <string name="loading_indicator">loading indicator</string>
+    <string name="empty_text_view">empty view text shows up here</string>
+    <string name="review_button_description">click for reviews of this movie</string>
+    <string name="trailer_button_description">click for movie trailers</string>
 </resources>

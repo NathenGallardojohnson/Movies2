@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/background_dark"
+    android:background="@color/colorPrimaryDark"
     android:orientation="vertical"
     tools:context=".ReviewActivity">
 
@@ -14,16 +14,27 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:clipToPadding="false"
-        android:scrollbars="vertical" />
+        android:scrollbars="vertical"
+        android:visibility="gone" />
 
     <TextView
         android:id="@+id/empty_view"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/progressBarSize"
+        android:background="@android:color/transparent"
+        android:padding="@dimen/progressBarSize"
+        android:text=""
+        android:textAlignment="center"
+        android:textAppearance="?android:textAppearanceLargeInverse"
+        android:visibility="visible"
+        tools:text="@string/empty_text_view" />
 
-    <ImageView
+    <ProgressBar
         android:id="@+id/loading_indicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        style="@style/infinite_progress_horizontal"
+        android:contentDescription="@string/loading_indicator"
+        android:visibility="visible" />
 </LinearLayout>
 

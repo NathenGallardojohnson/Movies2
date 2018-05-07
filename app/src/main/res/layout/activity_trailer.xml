@@ -1,19 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/viewFrame"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/background_dark"
-    android:orientation="vertical"
     tools:context=".TrailerActivity">
 
-    <TextView
-        android:id="@+id/empty_view"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        <TextView
+            android:id="@+id/empty_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="@dimen/progressBarSize"
+            android:background="@android:color/transparent"
+            android:padding="@dimen/progressBarSize"
+            android:text=""
+            android:textAlignment="center"
+            android:textAppearance="?android:textAppearanceLargeInverse"
+            tools:text="@string/empty_text_view" />
 
-    <ImageView
-        android:id="@+id/loading_indicator"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
-</LinearLayout>
+        <ProgressBar
+            android:id="@+id/loading_indicator"
+            style="@style/infinite_progress_horizontal"
+            android:contentDescription="@string/loading_indicator"
+            android:visibility="visible" />
+</FrameLayout>

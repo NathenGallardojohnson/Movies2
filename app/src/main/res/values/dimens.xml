@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="progressBarSize">56dp</dimen>
+    <dimen name="toolbarHeight">56dp</dimen>
+    <dimen name="buttonBarPadding">24dp</dimen>
+    <dimen name="buttonBarButtonPadding">4dp</dimen>
+</resources>

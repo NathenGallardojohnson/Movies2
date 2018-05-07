@@ -1,12 +1,11 @@
 package com.example.android.movies;
 
-public class Trailer {
-
+class Trailer {
 
     private String trailer_name;
     private String trailer_key;
 
-    public Trailer(String trailer_name, String trailer_key) {
+    Trailer(String trailer_name, String trailer_key) {
         this.trailer_name = trailer_name;
         this.trailer_key = trailer_key;
     }
