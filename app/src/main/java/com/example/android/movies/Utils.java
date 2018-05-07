@@ -22,8 +22,6 @@ import java.util.List;
 class Utils {
 
     private static final String LOG_TAG = Utils.class.getSimpleName();
-    private static int reviewLength = 0;
-    private static int trailerLength = 0;
 
     private Utils() {
     }
@@ -253,9 +251,8 @@ class Utils {
             // Extract the JSONArray associated with the key called "results",
             // which represents a list of items (or movies).
             JSONArray resultsArray = baseJsonResponse.getJSONArray("results");
-            reviewLength = resultsArray.length();
             // For each movie in the results, create a {@link Review} object
-            for (int i = 0; i < reviewLength; i++) {
+            for (int i = 0; i < resultsArray.length(); i++) {
 
                 // Get a single article at position i within the list of movies
                 JSONObject currentReview = resultsArray.getJSONObject(i);
@@ -311,9 +308,8 @@ class Utils {
             // Extract the JSONArray associated with the key called "results",
             // which represents a list of items (or videos).
             JSONArray resultsArray = baseJsonResponse.getJSONArray("results");
-            trailerLength = resultsArray.length();
             // For each video in the results, create an {@link MovieData} object
-            for (int i = 0; i < trailerLength; i++) {
+            for (int i = 0; i < resultsArray.length(); i++) {
                     // Get a single article at position i within the list of videos
                     JSONObject currentVideo = resultsArray.getJSONObject(i);
 

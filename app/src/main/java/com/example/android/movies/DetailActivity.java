@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -22,7 +23,7 @@ public class DetailActivity extends AppCompatActivity {
     private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
     ListView listView;
     private TextView mEmptyStateTextView;
-    private ImageView loadingIndicator;
+    private ProgressBar loadingIndicator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

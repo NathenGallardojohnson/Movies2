@@ -17,6 +17,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -47,16 +48,16 @@ public class MainActivity extends AppCompatActivity {
     private static final String ORDER_BY_KEY = "orderby";
     private static final String URL_KEY = "url";
     private List<MovieData> movieData = new ArrayList<>();
-    private final String BASEAPIURL = "http://api.themoviedb.org/3/movie";
+    private final String BASE_API_URL = "http://api.themoviedb.org/3/movie";
     private final String POPULAR = "/popular";
-    private final String TOPRATED = "/top_rated";
+    private final String TOP_RATED = "/top_rated";
     //API KEY REMOVED - get one at https://www.themoviedb.org/account/signup
     private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
     private GridViewAdapter gridAdapter;
-    private View loadingIndicator;
-    private String url = (BASEAPIURL + POPULAR + API_KEY);
-    private String ORDERBY = null;
-    private boolean SHOWFAVORITES = false;
+    private ProgressBar loadingIndicator;
+    private String url = (BASE_API_URL + POPULAR + API_KEY);
+    private String ORDER_BY = null;
+    private boolean SHOW_FAVORITES = false;
     private TextView mEmptyStateTextView;
 
     @Override
@@ -166,7 +167,7 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-                    ORDERBY = bundle.getString(ORDER_BY_KEY);
+                    ORDER_BY = bundle.getString(ORDER_BY_KEY);
                     mEmptyStateTextView.setVisibility(View.GONE);
                     return new android.support.v4.content.CursorLoader(
                             MainActivity.this,
@@ -174,7 +175,7 @@ public class MainActivity extends AppCompatActivity {
                             FAVORITE_PROJECTION,
                             IS_FAVORITED,
                             FAVORITED,
-                            ORDERBY
+                            ORDER_BY
                     );
                 }
 
@@ -242,34 +243,34 @@ public class MainActivity extends AppCompatActivity {
                 if (item.isChecked()) {
                     sortBy();
                     item.setChecked(false);
-                    SHOWFAVORITES = false;
+                    SHOW_FAVORITES = false;
                     return true;
                 } else {
                     showFavorites();
                     item.setChecked(true);
-                    SHOWFAVORITES = true;
+                    SHOW_FAVORITES = true;
                     return true;
                 }
             case R.id.sort_by_rating:
                 if (item.isChecked()) {
                     item.setChecked(false);
-                    url = (BASEAPIURL + POPULAR + API_KEY);
-                    ORDERBY = ORDER_BY_POPULAR;
+                    url = (BASE_API_URL + POPULAR + API_KEY);
+                    ORDER_BY = ORDER_BY_POPULAR;
                 } else {
                     item.setChecked(true);
-                    url = (BASEAPIURL + TOPRATED + API_KEY);
-                    ORDERBY = ORDER_BY_VOTE;
+                    url = (BASE_API_URL + TOP_RATED + API_KEY);
+                    ORDER_BY = ORDER_BY_VOTE;
                 }
                 return true;
             case R.id.sort_by_votes:
                 if (item.isChecked()) {
                     item.setChecked(false);
-                    url = (BASEAPIURL + TOPRATED + API_KEY);
-                    ORDERBY = ORDER_BY_VOTE;
+                    url = (BASE_API_URL + TOP_RATED + API_KEY);
+                    ORDER_BY = ORDER_BY_VOTE;
                 } else {
                     item.setChecked(true);
-                    url = (BASEAPIURL + POPULAR + API_KEY);
-                    ORDERBY = ORDER_BY_POPULAR;
+                    url = (BASE_API_URL + POPULAR + API_KEY);
+                    ORDER_BY = ORDER_BY_POPULAR;
                 }
                 return true;
             default:
@@ -280,7 +281,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean showFavorites() {
         if (isOnline()) {
             Bundle bundle = new Bundle();
-            bundle.putString(ORDER_BY_KEY, ORDERBY);
+            bundle.putString(ORDER_BY_KEY, ORDER_BY);
             getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
             getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
             return true;
@@ -316,8 +317,8 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList(MOVIE_KEY, (ArrayList<? extends Parcelable>) movieData);
-        outState.putBoolean(FAVORITE_KEY, SHOWFAVORITES);
-        outState.putString(ORDER_BY_KEY, ORDERBY);
+        outState.putBoolean(FAVORITE_KEY, SHOW_FAVORITES);
+        outState.putString(ORDER_BY_KEY, ORDER_BY);
         outState.putString(URL_KEY, url);
         super.onSaveInstanceState(outState);
     }

@@ -11,6 +11,7 @@ import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.List;
@@ -20,7 +21,7 @@ public class ReviewActivity extends AppCompatActivity {
     private static final int REVIEW_LOADER_ID = 3;
     ListView listView;
     private TextView mEmptyStateTextView;
-    private View loadingIndicator;
+    private ProgressBar loadingIndicator;
     private ReviewAdapter reviewAdapter;
     private LoaderManager.LoaderCallbacks<List<Review>> reviewLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<List<Review>>() {

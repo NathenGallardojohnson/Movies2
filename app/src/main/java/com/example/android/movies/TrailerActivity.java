@@ -15,6 +15,7 @@ import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -54,7 +55,7 @@ public class TrailerActivity extends AppCompatActivity implements
     private View playerView;
     private YouTubePlayer player;
     private TextView mEmptyStateTextView;
-    private View loadingIndicator;
+    private ProgressBar loadingIndicator;
     private Dialog errorDialog;
     private boolean activityResumed;
     private State state;
