@@ -9,7 +9,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
@@ -21,7 +20,6 @@ public class DetailActivity extends AppCompatActivity {
     private final String REVIEWS = "/reviews";
     //API KEY REMOVED - get one at  https://www.themoviedb.org/account/signup
     private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
-    ListView listView;
     private TextView mEmptyStateTextView;
     private ProgressBar loadingIndicator;
 
