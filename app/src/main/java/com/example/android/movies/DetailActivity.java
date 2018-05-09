@@ -50,6 +50,7 @@ public class DetailActivity extends AppCompatActivity {
         plotTextView.setText(plot);
         ImageView imageView = findViewById(R.id.image);
         Picasso.with(this).load(posterUrl).into(imageView);
+        loadingIndicator.setVisibility(View.GONE);
 
         Button reviewButton = findViewById(R.id.review_button);
         reviewButton.setOnClickListener(new View.OnClickListener() {
