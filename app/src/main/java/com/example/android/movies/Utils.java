@@ -308,6 +308,7 @@ class Utils {
             // Extract the JSONArray associated with the key called "results",
             // which represents a list of items (or videos).
             JSONArray resultsArray = baseJsonResponse.getJSONArray("results");
+
             // For each video in the results, create an {@link MovieData} object
             for (int i = 0; i < resultsArray.length(); i++) {
                     // Get a single article at position i within the list of videos
@@ -316,12 +317,15 @@ class Utils {
                     // Extract the value for the key called "key"
                     String key = currentVideo.getString("key");
 
+                //Get the URL to pull the thumbnail from
+                String url = getTrailerThumbnailUrl(key);
+
                     // Extract the value for the key called "name"
                     String name = currentVideo.getString("name");
 
                 // Create a new {@link Data} object with the name and key
-                    // from the JSON response.
-                Trailer mVideo = new Trailer(name, key);
+                // from the JSON response.
+                Trailer mVideo = new Trailer(name, key, url);
 
                     // Add the new {@link MovieData} to the list of movies.
                     videoData.add(mVideo);
@@ -339,10 +343,17 @@ class Utils {
     }
 
     static String getPosterUrl(String posterPath) {
-        String BASEIMAGEURL = "http://image.tmdb.org/t/p/";
+        String BASE_IMAGE_URL = "http://image.tmdb.org/t/p/";
         String SIZE = "w185";
 
-        return (BASEIMAGEURL + SIZE + posterPath);
+        return (BASE_IMAGE_URL + SIZE + posterPath);
+    }
+
+    private static String getTrailerThumbnailUrl(String videoId) {
+        String BASE_THUMBNAIL_URL = "https://img.youtube.com/vi/";
+        String SIZE = "/0.jpg";
+
+        return (BASE_THUMBNAIL_URL + videoId + SIZE);
     }
 
 }

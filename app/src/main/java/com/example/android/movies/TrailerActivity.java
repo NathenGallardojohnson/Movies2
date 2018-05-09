@@ -10,11 +10,11 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.LoaderManager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
-import android.util.Pair;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.FrameLayout;
+import android.widget.GridView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,18 +22,15 @@ import android.widget.Toast;
 import com.google.android.youtube.player.YouTubeInitializationResult;
 import com.google.android.youtube.player.YouTubePlayer;
 import com.google.android.youtube.player.YouTubePlayerFragment;
-import com.google.android.youtube.player.YouTubeThumbnailLoader;
-import com.google.android.youtube.player.YouTubeThumbnailView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
-import static java.lang.Math.sqrt;
 
 public class TrailerActivity extends AppCompatActivity implements
-        YouTubePlayer.OnInitializedListener,
-        YouTubeThumbnailView.OnInitializedListener, YouTubeThumbnailView.OnClickListener {
+        YouTubePlayer.OnInitializedListener/*,
+        YouTubeThumbnailView.OnInitializedListener, YouTubeThumbnailView.OnClickListener*/ {
 
     private static final int TRAILER_LOADER_ID = 4;
 
@@ -48,10 +45,13 @@ public class TrailerActivity extends AppCompatActivity implements
     // YouTube thumbnails have a 16 / 9 aspect ratio
     private static final double THUMBNAIL_ASPECT_RATIO = 16 / 9d;
     private static List<Trailer> VIDEO_LIST = new ArrayList<>();
-    private ImageWallView imageWallView;
-    private YouTubeThumbnailView thumbnailView;
-    private YouTubeThumbnailLoader thumbnailLoader;
+    private TrailerGridAdapter trailerGridAdapter;
+    /*    private ImageWallView imageWallView;
+        private YouTubeThumbnailView thumbnailView;
+        private YouTubeThumbnailLoader thumbnailLoader;*/
+    private GridView gridView;
     private YouTubePlayerFragment playerFragment;
+    private List<Trailer> trailers = new ArrayList<>();
     private View playerView;
     private YouTubePlayer player;
     private TextView mEmptyStateTextView;
@@ -68,6 +68,7 @@ public class TrailerActivity extends AppCompatActivity implements
 
                     View loadingIndicator = findViewById(R.id.loading_indicator);
                     loadingIndicator.setVisibility(View.VISIBLE);
+                    state = State.LOADING_THUMBNAILS;
                     return new VideoLoader(TrailerActivity.this, url);
                 }
 
@@ -87,26 +88,19 @@ public class TrailerActivity extends AppCompatActivity implements
                         mEmptyStateTextView.setText(R.string.no_internet_connection);
                     }
 
-                    // If there is a valid list of {@link Trailer}, then send them to the image wall
+                    // If there is a valid list of {@link Trailer}, then add them to the adapter's
+                    // data set. This will trigger the GridView to update.
                     if (data != null && !data.isEmpty()) {
                         mEmptyStateTextView.setVisibility(View.GONE);
-                        if ((data.size() % 2) == 1) {
-                            MAX_NUMBER_OF_ROWS_WANTED = (int) (1 + sqrt((double) data.size()));
-                        } else {
-                            MAX_NUMBER_OF_ROWS_WANTED = (int) sqrt((double) data.size());
-                        }
-                        //Clear the list so it doesn't accumulate erroneous items
-                        VIDEO_LIST = new ArrayList<>();
-                        //Set list to current movies trailers
-                        VIDEO_LIST = data;
-                        buildTheWall();
+                        trailerGridAdapter.addAll(data);
+                        trailerGridAdapter.notifyDataSetChanged();
                     }
                 }
 
                 @Override
                 public void onLoaderReset(@NonNull android.support.v4.content.Loader<List<Trailer>> loader) {
-                    //Clear the VIDEO_LIST for the next use
-                    VIDEO_LIST = new ArrayList<>();
+                    // Loader reset, so we can clear out our existing data.
+                    trailerGridAdapter.clear();
                 }
             };
 
@@ -116,15 +110,32 @@ public class TrailerActivity extends AppCompatActivity implements
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_trailer);
+        state = State.UNINITIALIZED;
+
         mEmptyStateTextView = findViewById(R.id.empty_view);
         loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
+
+        ViewGroup viewFrame = findViewById(R.id.viewFrame);
+        playerView = new FrameLayout(this);
+        playerView.setId(R.id.player_view);
+        playerView.setVisibility(View.GONE);
+        viewFrame.addView(playerView, MATCH_PARENT, MATCH_PARENT);
+
+        playerFragment = YouTubePlayerFragment.newInstance();
+        playerFragment.initialize(Keys.YOU_TUBE_KEY, this);
+        getFragmentManager().beginTransaction().add(R.id.player_view, playerFragment).commit();
+
         Intent intent = getIntent();
         String trailerUrl = intent.getStringExtra("QUERY");
         Bundle bundle = new Bundle();
         bundle.putString("QUERY", trailerUrl);
+
+        gridView = findViewById(R.id.trailerGridView);
+        trailerGridAdapter = new TrailerGridAdapter(TrailerActivity.this, trailers);
+        gridView.setAdapter(trailerGridAdapter);
+
         if (isOnline()) {
             getSupportLoaderManager().initLoader(TRAILER_LOADER_ID, bundle, trailerLoaderCallbacks);
         } else {
@@ -134,12 +145,19 @@ public class TrailerActivity extends AppCompatActivity implements
             mEmptyStateTextView.setText(R.string.no_internet_connection);
         }
 
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                Trailer trailer = (Trailer) parent.getItemAtPosition(position);
+                state = State.VIDEO_LOADING;
+                player.cueVideo(trailer.getTrailer_key());
+            }
+        });
     }
 
     //Recursive method for loading all thumbnails in the VIDEO_LIST - the matching
     //listener takes these as they come and loads them into the individual image wall view
 
-    private void loadThumbs() {
+ /*   private void loadThumbs() {
         if (activityResumed && player != null && thumbnailLoader != null
                 && state.equals(State.UNINITIALIZED)) {
             int i = 0;
@@ -149,11 +167,11 @@ public class TrailerActivity extends AppCompatActivity implements
                 i++;
             }
         }
-    }
+    }*/
 
     //Overridden YouTubeThumbnailView methods
 
-    @Override
+/*    @Override
     public void onInitializationSuccess(YouTubeThumbnailView thumbnailView, YouTubeThumbnailLoader thumbnailLoader) {
         this.thumbnailLoader = thumbnailLoader;
         thumbnailLoader.setOnThumbnailLoadedListener(new ThumbnailListener());
@@ -173,7 +191,8 @@ public class TrailerActivity extends AppCompatActivity implements
                     String.format(getString(R.string.error_thumbnail_view), errorReason.toString());
             Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
         }
-    }
+    }*/
+
 
     //Overridden YouTubePlayer methods
 
@@ -183,7 +202,6 @@ public class TrailerActivity extends AppCompatActivity implements
         TrailerActivity.this.player = player;
         player.setPlayerStyle(YouTubePlayer.PlayerStyle.CHROMELESS);
         player.setPlayerStateChangeListener(new VideoListener());
-        loadThumbs();
     }
 
     @Override
@@ -200,7 +218,7 @@ public class TrailerActivity extends AppCompatActivity implements
         }
     }
 
-    private void buildTheWall() {
+/*    private void buildTheWall() {
         state = State.UNINITIALIZED;
 
         ViewGroup viewFrame = findViewById(R.id.viewFrame);
@@ -214,12 +232,13 @@ public class TrailerActivity extends AppCompatActivity implements
 
         imageWallView = new ImageWallView(this, imageWidth, imageHeight, interImagePaddingPx);
         imageWallView.setVisibility(View.VISIBLE);
-        viewFrame.addView(imageWallView, MATCH_PARENT, MATCH_PARENT);
+        viewFrame.addView(imageWallView, MATCH_PARENT, MATCH_PARENT);*/
 
-        thumbnailView = new YouTubeThumbnailView(this);
-        thumbnailView.initialize(Keys.YOU_TUBE_KEY, this);
+/*        thumbnailView = new YouTubeThumbnailView(this);
+        thumbnailView.setId(R.id.trailer_thumbnail);
+        thumbnailView.initialize(Keys.YOU_TUBE_KEY, this);*/
 
-        playerView = new FrameLayout(this);
+/*        playerView = new FrameLayout(this);
         playerView.setId(R.id.player_view);
         playerView.setVisibility(View.GONE);
         viewFrame.addView(playerView, MATCH_PARENT, MATCH_PARENT);
@@ -234,14 +253,14 @@ public class TrailerActivity extends AppCompatActivity implements
 
         //Set the image wall and player as the main view
         setContentView(viewFrame);
-    }
+    }*/
 
     //OnClick method for the trailer thumbnails that launches the player
-    @Override
+/*    @Override
     public void onClick(View v) {
         state = State.VIDEO_LOADING;
         player.cueVideo((String) v.getTag());
-    }
+    }*/
 
     //Activity lifecycle methods
     @Override
@@ -253,7 +272,7 @@ public class TrailerActivity extends AppCompatActivity implements
             }
             errorDialog = null;
             playerFragment.initialize(Keys.YOU_TUBE_KEY, this);
-            thumbnailView.initialize(Keys.YOU_TUBE_KEY, this);
+            /*            thumbnailView.initialize(Keys.YOU_TUBE_KEY, this);*/
         }
     }
 
@@ -261,7 +280,12 @@ public class TrailerActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         activityResumed = true;
-        if (thumbnailLoader != null && player != null) {
+        if (state.equals(State.VIDEO_PLAYING)) {
+            gridView.setVisibility(View.GONE);
+            playerView.setVisibility(View.VISIBLE);
+            player.play();
+        }
+/*        if (thumbnailLoader != null && player != null) {
             if (state.equals(State.UNINITIALIZED)) {
                 imageWallView.setVisibility(View.INVISIBLE);
                 loadThumbs();
@@ -276,7 +300,7 @@ public class TrailerActivity extends AppCompatActivity implements
                     player.play();
                 }
             }
-        }
+        }*/
     }
 
     @Override
@@ -287,9 +311,9 @@ public class TrailerActivity extends AppCompatActivity implements
 
     @Override
     protected void onDestroy() {
-        if (thumbnailLoader != null) {
+/*        if (thumbnailLoader != null) {
             thumbnailLoader.release();
-        }
+        }*/
         getSupportLoaderManager().destroyLoader(TRAILER_LOADER_ID);
         super.onDestroy();
     }
@@ -316,7 +340,7 @@ public class TrailerActivity extends AppCompatActivity implements
         VIDEO_PLAYING,
         VIDEO_ENDED
     }
-
+/*
     //Thumbnail listener adds each thumbnail to the image wall as they are loaded
     private final class ThumbnailListener implements
             YouTubeThumbnailLoader.OnThumbnailLoadedListener {
@@ -344,14 +368,14 @@ public class TrailerActivity extends AppCompatActivity implements
                                      YouTubeThumbnailLoader.ErrorReason reason) {
             loadThumbs();
         }
-    }
+    }*/
 
     //VideoListener manages view visibility based on player state and trigger video playback upon completion of cuing
     private final class VideoListener implements YouTubePlayer.PlayerStateChangeListener {
 
         @Override
         public void onLoaded(String videoId) {
-            thumbnailView.setVisibility(View.GONE);
+            gridView.setVisibility(View.GONE);
             playerView.setVisibility(View.VISIBLE);
             state = State.VIDEO_PLAYING;
             player.play();
@@ -360,8 +384,9 @@ public class TrailerActivity extends AppCompatActivity implements
         @Override
         public void onVideoEnded() {
             state = State.VIDEO_ENDED;
-            imageWallView.setVisibility(View.VISIBLE);
+            gridView.setVisibility(View.VISIBLE);
             playerView.setVisibility(View.GONE);
+            state = State.LOADING_THUMBNAILS;
         }
 
         @Override
@@ -372,10 +397,10 @@ public class TrailerActivity extends AppCompatActivity implements
                 mEmptyStateTextView.setText(errorReason.toString());
                 mEmptyStateTextView.setVisibility(View.VISIBLE);
                 playerView.setVisibility(View.GONE);
-                imageWallView.setVisibility(View.GONE);
+                gridView.setVisibility(View.GONE);
                 state = State.UNINITIALIZED;
-                thumbnailLoader.release();
-                thumbnailLoader = null;
+/*                thumbnailLoader.release();
+                thumbnailLoader = null;*/
                 player = null;
             } else {
                 state = State.VIDEO_ENDED;

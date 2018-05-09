@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center_vertical"
-    android:background="@android:color/background_dark"
+    android:background="@drawable/curtains"
     tools:context="com.example.android.movies.MainActivity">
 
     <android.support.v7.widget.Toolbar

@@ -4,25 +4,39 @@
     android:id="@+id/viewFrame"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/background_dark"
+    android:layout_gravity="center_horizontal"
+    android:background="@drawable/curtains"
     tools:context=".TrailerActivity">
 
-        <TextView
-            android:id="@+id/empty_view"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:layout_margin="@dimen/progressBarSize"
-            android:background="@android:color/transparent"
-            android:padding="@dimen/progressBarSize"
-            android:text=""
-            android:textAlignment="center"
-            android:textAppearance="?android:textAppearanceLargeInverse"
-            tools:text="@string/empty_text_view" />
+    <GridView
+        android:id="@+id/trailerGridView"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:clickable="true"
+        android:columnWidth="360dp"
+        android:drawSelectorOnTop="true"
+        android:focusable="true"
+        android:numColumns="auto_fit"
+        android:stretchMode="spacingWidthUniform"
+        android:verticalSpacing="1dp" />
 
-        <ProgressBar
-            android:id="@+id/loading_indicator"
-            style="@style/infinite_progress_horizontal"
-            android:contentDescription="@string/loading_indicator"
-            android:visibility="visible" />
+    <TextView
+        android:id="@+id/empty_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_margin="@dimen/progressBarSize"
+        android:background="@android:color/transparent"
+        android:padding="@dimen/progressBarSize"
+        android:text=""
+        android:textAlignment="center"
+        android:textAppearance="?android:textAppearanceLargeInverse"
+        tools:text="@string/empty_text_view" />
+
+    <ProgressBar
+        android:id="@+id/loading_indicator"
+        style="@style/infinite_progress_horizontal"
+        android:contentDescription="@string/loading_indicator"
+        android:visibility="visible" />
 </FrameLayout>

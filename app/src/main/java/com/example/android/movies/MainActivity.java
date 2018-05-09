@@ -98,8 +98,6 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
-
-
     }
 
     protected boolean isOnline() {

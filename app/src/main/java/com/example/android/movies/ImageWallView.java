@@ -14,9 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
 
-/**
- * A view which displays a grid of images.
- */
 public class ImageWallView extends ViewGroup {
 
     private final Context context;
@@ -27,6 +24,7 @@ public class ImageWallView extends ViewGroup {
     private final int interImagePadding;
 
     protected ImageView[] images;
+    protected String[] titles;
     protected List<Integer> unInitializedImages;
 
     private int numberOfColumns;
@@ -41,7 +39,8 @@ public class ImageWallView extends ViewGroup {
         this.imageHeight = imageHeight;
         this.interImagePadding = interImagePadding;
         this.images = new ImageView[0];
-        this.unInitializedImages = new ArrayList<Integer>();
+        this.titles = new String[0];
+        this.unInitializedImages = new ArrayList<>();
     }
 
 /*    public ImageWallView(Context context, AttributeSet attrs, ImageView[] images, int defStyleAttr) {
@@ -132,7 +131,7 @@ public class ImageWallView extends ViewGroup {
     public void setImageDrawable(int col, int row, Drawable drawable) {
         int elementIdx = getElementIdx(col, row);
         // manually boxing elementIdx to avoid calling List.remove(int position) method overload
-        unInitializedImages.remove(new Integer(elementIdx));
+        unInitializedImages.remove(Integer.valueOf(elementIdx));
         images[elementIdx].setImageDrawable(drawable);
     }
 
@@ -154,7 +153,7 @@ public class ImageWallView extends ViewGroup {
 
         int col = nextElement / numberOfRows;
         int row = nextElement % numberOfRows;
-        return new Pair<Integer, Integer>(col, row);
+        return new Pair<>(col, row);
     }
 
     public boolean allImagesLoaded() {
