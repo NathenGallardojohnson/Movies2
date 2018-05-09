@@ -106,7 +106,7 @@
 
         <ImageButton
             android:id="@+id/favorite_button"
-            style="?android:attr/actionButtonStyle"
+            style="@style/Widget.AppCompat.ImageButton"
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:layout_below="@+id/vote"
@@ -136,7 +136,7 @@
             android:textColor="@color/colorPrimaryDark"
             android:textSize="14sp"
             android:typeface="monospace"
-            tools:text="Welcome back to Popular Movies! In this second and final stage, you’ll add additional functionality to the app you built in Stage 1." />
+            tools:text="@string/tool_text" />
 
         <ImageView
             android:id="@+id/divider"

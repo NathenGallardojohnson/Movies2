@@ -29,26 +29,14 @@ import java.util.List;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 
 public class TrailerActivity extends AppCompatActivity implements
-        YouTubePlayer.OnInitializedListener/*,
-        YouTubeThumbnailView.OnInitializedListener, YouTubeThumbnailView.OnClickListener*/ {
+        YouTubePlayer.OnInitializedListener {
 
     private static final int TRAILER_LOADER_ID = 4;
 
     private static final int RECOVERY_DIALOG_REQUEST = 1;
-
-    // The player view cannot be smaller than 110 pixels high.
-    private static final float PLAYER_VIEW_MINIMUM_HEIGHT_DP = 110;
-    private static int MAX_NUMBER_OF_ROWS_WANTED = 4;
-
-    private static final int INTER_IMAGE_PADDING_DP = 5;
-
-    // YouTube thumbnails have a 16 / 9 aspect ratio
-    private static final double THUMBNAIL_ASPECT_RATIO = 16 / 9d;
-    private static List<Trailer> VIDEO_LIST = new ArrayList<>();
+    private static Trailer trailer;
+    private static Bundle bundle = new Bundle();
     private TrailerGridAdapter trailerGridAdapter;
-    /*    private ImageWallView imageWallView;
-        private YouTubeThumbnailView thumbnailView;
-        private YouTubeThumbnailLoader thumbnailLoader;*/
     private GridView gridView;
     private YouTubePlayerFragment playerFragment;
     private List<Trailer> trailers = new ArrayList<>();
@@ -57,7 +45,7 @@ public class TrailerActivity extends AppCompatActivity implements
     private TextView mEmptyStateTextView;
     private ProgressBar loadingIndicator;
     private Dialog errorDialog;
-    private boolean activityResumed;
+    private boolean wasResumed;
     private State state;
     private LoaderManager.LoaderCallbacks<List<Trailer>> trailerLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<List<Trailer>>() {
@@ -94,6 +82,8 @@ public class TrailerActivity extends AppCompatActivity implements
                         mEmptyStateTextView.setVisibility(View.GONE);
                         trailerGridAdapter.addAll(data);
                         trailerGridAdapter.notifyDataSetChanged();
+                        gridView.setVisibility(View.VISIBLE);
+                        state = State.VIDEO_ENDED;
                     }
                 }
 
@@ -129,7 +119,6 @@ public class TrailerActivity extends AppCompatActivity implements
 
         Intent intent = getIntent();
         String trailerUrl = intent.getStringExtra("QUERY");
-        Bundle bundle = new Bundle();
         bundle.putString("QUERY", trailerUrl);
 
         gridView = findViewById(R.id.trailerGridView);
@@ -147,52 +136,12 @@ public class TrailerActivity extends AppCompatActivity implements
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                Trailer trailer = (Trailer) parent.getItemAtPosition(position);
+                trailer = (Trailer) parent.getItemAtPosition(position);
                 state = State.VIDEO_LOADING;
                 player.cueVideo(trailer.getTrailer_key());
             }
         });
     }
-
-    //Recursive method for loading all thumbnails in the VIDEO_LIST - the matching
-    //listener takes these as they come and loads them into the individual image wall view
-
- /*   private void loadThumbs() {
-        if (activityResumed && player != null && thumbnailLoader != null
-                && state.equals(State.UNINITIALIZED)) {
-            int i = 0;
-            state = State.LOADING_THUMBNAILS;
-            while (i < VIDEO_LIST.size()) {
-                thumbnailLoader.setVideo(VIDEO_LIST.get(i).getTrailer_key());
-                i++;
-            }
-        }
-    }*/
-
-    //Overridden YouTubeThumbnailView methods
-
-/*    @Override
-    public void onInitializationSuccess(YouTubeThumbnailView thumbnailView, YouTubeThumbnailLoader thumbnailLoader) {
-        this.thumbnailLoader = thumbnailLoader;
-        thumbnailLoader.setOnThumbnailLoadedListener(new ThumbnailListener());
-        loadThumbs();
-    }
-
-    @Override
-    public void onInitializationFailure(
-            YouTubeThumbnailView thumbnailView, YouTubeInitializationResult errorReason) {
-        if (errorReason.isUserRecoverableError()) {
-            if (errorDialog == null || !errorDialog.isShowing()) {
-                errorDialog = errorReason.getErrorDialog(this, RECOVERY_DIALOG_REQUEST);
-                errorDialog.show();
-            }
-        } else {
-            String errorMessage =
-                    String.format(getString(R.string.error_thumbnail_view), errorReason.toString());
-            Toast.makeText(this, errorMessage, Toast.LENGTH_LONG).show();
-        }
-    }*/
-
 
     //Overridden YouTubePlayer methods
 
@@ -218,50 +167,6 @@ public class TrailerActivity extends AppCompatActivity implements
         }
     }
 
-/*    private void buildTheWall() {
-        state = State.UNINITIALIZED;
-
-        ViewGroup viewFrame = findViewById(R.id.viewFrame);
-        DisplayMetrics displayMetrics = getResources().getDisplayMetrics();
-        int maxAllowedNumberOfRows = (int) Math.floor(
-                (displayMetrics.heightPixels / displayMetrics.density) / PLAYER_VIEW_MINIMUM_HEIGHT_DP);
-        int numberOfRows = Math.min(maxAllowedNumberOfRows, MAX_NUMBER_OF_ROWS_WANTED);
-        int interImagePaddingPx = (int) displayMetrics.density * INTER_IMAGE_PADDING_DP;
-        int imageHeight = (displayMetrics.heightPixels / numberOfRows) - interImagePaddingPx;
-        int imageWidth = (int) (imageHeight * THUMBNAIL_ASPECT_RATIO);
-
-        imageWallView = new ImageWallView(this, imageWidth, imageHeight, interImagePaddingPx);
-        imageWallView.setVisibility(View.VISIBLE);
-        viewFrame.addView(imageWallView, MATCH_PARENT, MATCH_PARENT);*/
-
-/*        thumbnailView = new YouTubeThumbnailView(this);
-        thumbnailView.setId(R.id.trailer_thumbnail);
-        thumbnailView.initialize(Keys.YOU_TUBE_KEY, this);*/
-
-/*        playerView = new FrameLayout(this);
-        playerView.setId(R.id.player_view);
-        playerView.setVisibility(View.GONE);
-        viewFrame.addView(playerView, MATCH_PARENT, MATCH_PARENT);
-
-        playerFragment = YouTubePlayerFragment.newInstance();
-        playerFragment.initialize(Keys.YOU_TUBE_KEY, this);
-        getFragmentManager().beginTransaction().add(R.id.player_view, playerFragment).commit();
-
-        // Hide loading indicator and empty view as they are no longer needed
-        loadingIndicator.setVisibility(View.GONE);
-        mEmptyStateTextView.setVisibility(View.GONE);
-
-        //Set the image wall and player as the main view
-        setContentView(viewFrame);
-    }*/
-
-    //OnClick method for the trailer thumbnails that launches the player
-/*    @Override
-    public void onClick(View v) {
-        state = State.VIDEO_LOADING;
-        player.cueVideo((String) v.getTag());
-    }*/
-
     //Activity lifecycle methods
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -272,48 +177,52 @@ public class TrailerActivity extends AppCompatActivity implements
             }
             errorDialog = null;
             playerFragment.initialize(Keys.YOU_TUBE_KEY, this);
-            /*            thumbnailView.initialize(Keys.YOU_TUBE_KEY, this);*/
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        activityResumed = true;
+        wasResumed = true;
         if (state.equals(State.VIDEO_PLAYING)) {
             gridView.setVisibility(View.GONE);
             playerView.setVisibility(View.VISIBLE);
             player.play();
         }
-/*        if (thumbnailLoader != null && player != null) {
-            if (state.equals(State.UNINITIALIZED)) {
-                imageWallView.setVisibility(View.INVISIBLE);
-                loadThumbs();
-            } else if (state.equals(State.LOADING_THUMBNAILS)) {
-                imageWallView.setVisibility(View.VISIBLE);
-                playerView.setVisibility(View.GONE);
-                loadThumbs();
+        if (state.equals(State.VIDEO_LOADING)) {
+            gridView.setVisibility(View.GONE);
+            playerView.setVisibility(View.VISIBLE);
+            loadingIndicator.setVisibility(View.VISIBLE);
+            player.cueVideo(trailer.getTrailer_key());
+        }
+        if (state.equals(State.VIDEO_ENDED)) {
+            gridView.setVisibility(View.VISIBLE);
+            playerView.setVisibility(View.GONE);
+            loadingIndicator.setVisibility(View.GONE);
+        }
+        if (state.equals(State.LOADING_THUMBNAILS)) {
+            gridView.setVisibility(View.GONE);
+            playerView.setVisibility(View.GONE);
+            loadingIndicator.setVisibility(View.VISIBLE);
+            if (isOnline()) {
+                getSupportLoaderManager().initLoader(TRAILER_LOADER_ID, bundle, trailerLoaderCallbacks);
             } else {
-                if (state.equals(State.VIDEO_PLAYING)) {
-                    imageWallView.setVisibility(View.GONE);
-                    playerView.setVisibility(View.VISIBLE);
-                    player.play();
-                }
+                // Hide loading indicator because the data cannot be loaded
+                loadingIndicator.setVisibility(View.GONE);
+                // Update empty state with no connection error message
+                mEmptyStateTextView.setText(R.string.no_internet_connection);
             }
-        }*/
+        }
     }
 
     @Override
     protected void onPause() {
-        activityResumed = false;
+        wasResumed = false;
         super.onPause();
     }
 
     @Override
     protected void onDestroy() {
-/*        if (thumbnailLoader != null) {
-            thumbnailLoader.release();
-        }*/
         getSupportLoaderManager().destroyLoader(TRAILER_LOADER_ID);
         super.onDestroy();
     }
@@ -340,35 +249,6 @@ public class TrailerActivity extends AppCompatActivity implements
         VIDEO_PLAYING,
         VIDEO_ENDED
     }
-/*
-    //Thumbnail listener adds each thumbnail to the image wall as they are loaded
-    private final class ThumbnailListener implements
-            YouTubeThumbnailLoader.OnThumbnailLoadedListener {
-        @Override
-        public void onThumbnailLoaded(YouTubeThumbnailView thumbnail, String videoId) {
-            Pair<Integer, Integer> target = imageWallView.getNextLoadTarget();
-            int elementIdx = imageWallView.getElementIdx(target.first, target.second);
-            thumbnail.setTag(videoId);
-            imageWallView.unInitializedImages.remove(new Integer(elementIdx));
-            imageWallView.images[elementIdx] = thumbnail;
-            imageWallView.images[elementIdx].setVisibility(View.VISIBLE);
-
-            if (activityResumed) {
-                if (state.equals(State.LOADING_THUMBNAILS)) {
-                    loadThumbs();
-                } else if (state.equals(State.VIDEO_PLAYING)) {
-                    state = State.VIDEO_LOADING;
-                    player.cueVideo(videoId);
-                }
-            }
-        }
-
-        @Override
-        public void onThumbnailError(YouTubeThumbnailView thumbnail,
-                                     YouTubeThumbnailLoader.ErrorReason reason) {
-            loadThumbs();
-        }
-    }*/
 
     //VideoListener manages view visibility based on player state and trigger video playback upon completion of cuing
     private final class VideoListener implements YouTubePlayer.PlayerStateChangeListener {
@@ -377,13 +257,12 @@ public class TrailerActivity extends AppCompatActivity implements
         public void onLoaded(String videoId) {
             gridView.setVisibility(View.GONE);
             playerView.setVisibility(View.VISIBLE);
-            state = State.VIDEO_PLAYING;
+            state = State.VIDEO_CUED;
             player.play();
         }
 
         @Override
         public void onVideoEnded() {
-            state = State.VIDEO_ENDED;
             gridView.setVisibility(View.VISIBLE);
             playerView.setVisibility(View.GONE);
             state = State.LOADING_THUMBNAILS;
@@ -399,8 +278,6 @@ public class TrailerActivity extends AppCompatActivity implements
                 playerView.setVisibility(View.GONE);
                 gridView.setVisibility(View.GONE);
                 state = State.UNINITIALIZED;
-/*                thumbnailLoader.release();
-                thumbnailLoader = null;*/
                 player = null;
             } else {
                 state = State.VIDEO_ENDED;
@@ -411,6 +288,7 @@ public class TrailerActivity extends AppCompatActivity implements
 
         @Override
         public void onVideoStarted() {
+            state = State.VIDEO_PLAYING;
         }
 
         @Override
@@ -419,6 +297,7 @@ public class TrailerActivity extends AppCompatActivity implements
 
         @Override
         public void onLoading() {
+            state = State.VIDEO_LOADING;
         }
     }
 }

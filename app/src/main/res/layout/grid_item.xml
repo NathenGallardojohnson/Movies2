@@ -15,12 +15,13 @@
     <TextView
         android:id="@+id/text"
         android:layout_width="fill_parent"
-        android:layout_height="28dp"
+        android:layout_height="30dp"
         android:gravity="center|center_vertical"
         android:shadowColor="@android:color/background_dark"
         android:shadowDx="4"
         android:shadowDy="6"
         android:shadowRadius="10"
         android:textAppearance="@style/TextAppearance.AppCompat.Title.Inverse"
+        android:textColor="@color/colorAccent"
         android:textSize="12sp" />
 </LinearLayout>

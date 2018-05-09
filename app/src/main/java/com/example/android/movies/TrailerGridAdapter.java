@@ -14,6 +14,7 @@ import com.squareup.picasso.Picasso;
 
 import java.util.List;
 
+
 class TrailerGridAdapter extends ArrayAdapter<Trailer> {
     private final Context context;
     private final int layoutResourceId;
@@ -38,6 +39,7 @@ class TrailerGridAdapter extends ArrayAdapter<Trailer> {
             holder = new ViewHolder();
             holder.imageTitle = row.findViewById(R.id.textView_title);
             holder.image = row.findViewById(R.id.trailer_thumbnail);
+            holder.image.setScaleType(ImageView.ScaleType.MATRIX);
             row.setTag(holder);
         } else {
             holder = (ViewHolder) row.getTag();
@@ -47,7 +49,10 @@ class TrailerGridAdapter extends ArrayAdapter<Trailer> {
         String name = trailer.getTrailer_name();
         holder.imageTitle.setText(name);
         String url = trailer.getTrailer_url();
-        Picasso.with(context).load(url).into(holder.image);
+        android.support.v4.util.Pair thumbSize = Utils.setThumbSize();
+        int height = (int) thumbSize.first;
+        int width = (int) thumbSize.second;
+        Picasso.with(context).load(url).resize(width, height).placeholder(R.drawable.user_placeholder).error(R.drawable.user_placeholder_error).into(holder.image);
 
         return row;
     }

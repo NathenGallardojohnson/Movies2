@@ -1,5 +1,7 @@
 package com.example.android.movies;
 
+import android.content.res.Resources;
+import android.support.v4.util.Pair;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -354,6 +356,29 @@ class Utils {
         String SIZE = "/0.jpg";
 
         return (BASE_THUMBNAIL_URL + videoId + SIZE);
+    }
+
+    public static int getScreenWidth() {
+        return Resources.getSystem().getDisplayMetrics().widthPixels;
+    }
+
+    public static int getScreenHeight() {
+        return Resources.getSystem().getDisplayMetrics().heightPixels;
+    }
+
+    public static Pair setThumbSize() {
+        int height = getScreenHeight();
+        int width = getScreenWidth();
+
+        if (height > width) {
+            width = (int) (.7 * (double) width);
+            height = width / 16 * 9;
+        } else {
+            width = (int) (.3 * (double) width);
+            height = width / 16 * 9;
+        }
+        Pair dimensions = new Pair(height, width);
+        return dimensions;
     }
 
 }
