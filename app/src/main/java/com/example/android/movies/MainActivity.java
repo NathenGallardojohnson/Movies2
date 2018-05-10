@@ -23,8 +23,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.android.movies.data.MovieContract.FAVORITED;
-import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
+import static com.example.android.movies.data.MovieContract.ALL;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PLOT;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POPULARITY;
@@ -59,6 +58,48 @@ public class MainActivity extends AppCompatActivity {
     private String ORDER_BY = null;
     private boolean SHOW_FAVORITES = false;
     private TextView mEmptyStateTextView;
+    final List<MovieData> favoritesData = new ArrayList<>();
+    private LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
+            new LoaderManager.LoaderCallbacks<Cursor>() {
+
+                @Override
+                public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
+                    ORDER_BY = bundle.getString(ORDER_BY_KEY);
+                    return new android.support.v4.content.CursorLoader(
+                            MainActivity.this,
+                            CONTENT_URI,
+                            FAVORITE_PROJECTION,
+                            ALL,
+                            null,
+                            ORDER_BY
+                    );
+                }
+
+                @Override
+                public void onLoadFinished(@NonNull android.support.v4.content.Loader<Cursor> loader, Cursor data) {
+
+                    if (data != null) {
+                        while (data.moveToNext()) {
+                            String title = data.getString(data.getColumnIndex(COLUMN_TITLE));
+                            String releaseDate = data.getString(data.getColumnIndex(COLUMN_RELEASE_DATE));
+                            String posterPath = data.getString(data.getColumnIndex(COLUMN_POSTER_PATH));
+                            String voteAverage = data.getString(data.getColumnIndex(COLUMN_VOTE_AVERAGE));
+                            String popularity = data.getString(data.getColumnIndex(COLUMN_POPULARITY));
+                            String plot = data.getString(data.getColumnIndex(COLUMN_PLOT));
+                            String id = data.getString(data.getColumnIndex(COLUMN_ID));
+
+                            favoritesData.add(new MovieData(title, releaseDate, posterPath, voteAverage, popularity, plot, id));
+                        }
+                    }
+                }
+
+                @Override
+                public void onLoaderReset(@NonNull android.support.v4.content.Loader<Cursor> loader) {
+                    // Clear the adapter of previous movie data
+                    gridAdapter.clear();
+                }
+
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +117,8 @@ public class MainActivity extends AppCompatActivity {
         loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
 
+        getFavorites();
+
         if (isOnline()) {
             sortBy();
         } else {
@@ -91,13 +134,26 @@ public class MainActivity extends AppCompatActivity {
                 intent.putExtra("releaseDate", movieData.getReleaseDate());
                 intent.putExtra("posterPath", movieData.getPosterPath());
                 intent.putExtra("voteAverage", movieData.getVoteAverage());
+                intent.putExtra("popularity", movieData.getPopularity());
                 intent.putExtra("plot", movieData.getPlot());
                 intent.putExtra("id", movieData.getId());
+                intent.putExtra("isFavorited", checkIfFavorited(favoritesData, movieData.getId()));
 
                 //Start details activity
                 startActivity(intent);
             }
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        getFavorites();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     protected boolean isOnline() {
@@ -160,71 +216,15 @@ public class MainActivity extends AppCompatActivity {
 
             };
 
-    private LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
-            new LoaderManager.LoaderCallbacks<Cursor>() {
-
-                @Override
-                public android.support.v4.content.Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
-                    ORDER_BY = bundle.getString(ORDER_BY_KEY);
-                    mEmptyStateTextView.setVisibility(View.GONE);
-                    return new android.support.v4.content.CursorLoader(
-                            MainActivity.this,
-                            CONTENT_URI,
-                            FAVORITE_PROJECTION,
-                            IS_FAVORITED,
-                            FAVORITED,
-                            ORDER_BY
-                    );
-                }
-
-                @Override
-                public void onLoadFinished(@NonNull android.support.v4.content.Loader<Cursor> loader, Cursor data) {
-                    movieData = new ArrayList<>();
-
-                    View loadingIndicator = findViewById(R.id.loading_indicator);
-                    loadingIndicator.setVisibility(View.GONE);
-
-
-                    mEmptyStateTextView.setVisibility(View.VISIBLE);
-
-                    if (data == null) {
-                        mEmptyStateTextView.setText(R.string.no_favorites);
-                    } else {
-                        loadingIndicator.setVisibility(View.GONE);
-                        data.moveToFirst();
-                        while (data.moveToNext()) {
-                            String title = data.getString(data.getColumnIndex(COLUMN_TITLE));
-                            String releaseDate = data.getString(data.getColumnIndex(COLUMN_RELEASE_DATE));
-                            String posterPath = data.getString(data.getColumnIndex(COLUMN_POSTER_PATH));
-                            String voteAverage = data.getString(data.getColumnIndex(COLUMN_VOTE_AVERAGE));
-                            String popularity = data.getString(data.getColumnIndex(COLUMN_POPULARITY));
-                            String plot = data.getString(data.getColumnIndex(COLUMN_PLOT));
-                            String id = data.getString(data.getColumnIndex(COLUMN_ID));
-
-                            movieData.add(new MovieData(title, releaseDate, posterPath, voteAverage, popularity, plot, id));
-                        }
-                        // Clear the adapter of previous movie data
-                        gridAdapter.clear();
-
-                        // If there is a valid list of {@link Movies}, then add them to the adapter's
-                        // data set. This will trigger the GridView to update.
-                        if (movieData != null && !movieData.isEmpty()) {
-                            mEmptyStateTextView.setVisibility(View.GONE);
-                            gridAdapter.addAll(movieData);
-                            gridAdapter.notifyDataSetChanged();
-                        }
-
-                    }
-
-                }
-
-                @Override
-                public void onLoaderReset(@NonNull android.support.v4.content.Loader<Cursor> loader) {
-                    // Clear the adapter of previous movie data
-                    gridAdapter.clear();
-                }
-
-            };
+    private boolean checkIfFavorited(List<MovieData> favoritesData, String id) {
+        for (int i = 0; i < favoritesData.size(); i++) {
+            MovieData mFavoriteData = favoritesData.get(i);
+            if (mFavoriteData.getId().contains(id)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -254,10 +254,12 @@ public class MainActivity extends AppCompatActivity {
                     item.setChecked(false);
                     url = (BASE_API_URL + POPULAR + API_KEY);
                     ORDER_BY = ORDER_BY_POPULAR;
+                    sortBy();
                 } else {
                     item.setChecked(true);
                     url = (BASE_API_URL + TOP_RATED + API_KEY);
                     ORDER_BY = ORDER_BY_VOTE;
+                    sortBy();
                 }
                 return true;
             case R.id.sort_by_votes:
@@ -265,10 +267,12 @@ public class MainActivity extends AppCompatActivity {
                     item.setChecked(false);
                     url = (BASE_API_URL + TOP_RATED + API_KEY);
                     ORDER_BY = ORDER_BY_VOTE;
+                    sortBy();
                 } else {
                     item.setChecked(true);
                     url = (BASE_API_URL + POPULAR + API_KEY);
                     ORDER_BY = ORDER_BY_POPULAR;
+                    sortBy();
                 }
                 return true;
             default:
@@ -277,19 +281,30 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private boolean showFavorites() {
+        // Clear the adapter of previous movie data
+        gridAdapter.clear();
+
+        // If there is a valid list of {@link Movies}, then add them to the adapter's
+        // data set. This will trigger the GridView to update.
+        if (movieData != null && !movieData.isEmpty()) {
+            mEmptyStateTextView.setVisibility(View.GONE);
+            gridAdapter.addAll(movieData);
+            gridAdapter.notifyDataSetChanged();
+            return true;
+        } else {
+            loadingIndicator.setVisibility(View.GONE);
+            // Update empty state with no connection error message
+            mEmptyStateTextView.setText(R.string.no_internet_connection);
+            return false;
+        }
+    }
+
+    private void getFavorites() {
         if (isOnline()) {
             Bundle bundle = new Bundle();
             bundle.putString(ORDER_BY_KEY, ORDER_BY);
             getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
             getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, bundle, favoriteLoaderCallbacks);
-            return true;
-        } else {
-            // Clear the adapter of previous movie data
-            gridAdapter.clear();
-            loadingIndicator.setVisibility(View.GONE);
-            // Update empty state with no connection error message
-            mEmptyStateTextView.setText(R.string.no_internet_connection);
-            return false;
         }
     }
 
@@ -310,7 +325,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
     }
-
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {

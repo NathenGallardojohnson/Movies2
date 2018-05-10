@@ -12,8 +12,8 @@ public class MovieData implements Parcelable{
     private String mPlot = " ";
     private String mId;
 
-    public MovieData(String title, String releaseDate, String posterPath, String voteAverage,
-                     String popularity, String plot, String id) {
+    MovieData(String title, String releaseDate, String posterPath, String voteAverage,
+              String popularity, String plot, String id) {
         mTitle = title;
         mReleaseDate = releaseDate;
         mPosterPath = posterPath;
@@ -28,7 +28,7 @@ public class MovieData implements Parcelable{
         mId = id;
     }
 
-    public MovieData(Parcel parcel){
+    private MovieData(Parcel parcel) {
         mTitle = parcel.readString();
         mReleaseDate = parcel.readString();
         mPosterPath = parcel.readString();
@@ -49,6 +49,10 @@ public class MovieData implements Parcelable{
             return new MovieData[size];
         }
     };
+
+    public MovieData() {
+
+    }
 
     public String getTitle() {
         return mTitle;

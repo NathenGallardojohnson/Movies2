@@ -19,9 +19,7 @@ import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PLOT;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POSTER_PATH;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_RELEASE_DATE;
-import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_REVIEW_QUANTITY;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TITLE;
-import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TRAILER_QUANTITY;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_FAVORITES_TYPE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_MOVIES_TYPE;
@@ -39,11 +37,11 @@ public class MovieProvider extends ContentProvider {
 
     private static final String LOG_TAG = MovieProvider.class.getSimpleName();
 
-    private static final int MOVIES = 1;
+    public static final int MOVIES = 1;
 
-    private static final int MOVIE = 2;
+    public static final int MOVIE = 2;
 
-    private static final int FAVORITES = 3;
+    public static final int FAVORITES = 3;
 
     private MovieDbHelper movieDbHelper;
 
@@ -151,32 +149,27 @@ public class MovieProvider extends ContentProvider {
 
     private Uri insertMovie(Uri uri, ContentValues values) {
         if (COLUMN_ID == null) {
-            throw new IllegalArgumentException("Inventory item requires an id");
+            throw new IllegalArgumentException("Movie item requires an id");
         }
         if (COLUMN_FAVORITED == null) {
-            throw new IllegalArgumentException("Inventory item requires a favorites designation");
+            throw new IllegalArgumentException("Movie item requires a favorites designation");
         }
         if (COLUMN_TITLE == null) {
-            throw new IllegalArgumentException("Inventory item requires a title");
+            throw new IllegalArgumentException("Movie item requires a title");
         }
         if (COLUMN_RELEASE_DATE == null) {
-            throw new IllegalArgumentException("Inventory item requires a release date");
+            throw new IllegalArgumentException("Movie item requires a release date");
         }
         if (COLUMN_POSTER_PATH == null) {
-            throw new IllegalArgumentException("Inventory item requires a poster path");
+            throw new IllegalArgumentException("Movie item requires a poster path");
         }
         if (COLUMN_VOTE_AVERAGE == null) {
-            throw new IllegalArgumentException("Inventory item requires a vote average");
+            throw new IllegalArgumentException("Movie item requires a vote average");
         }
         if (COLUMN_PLOT == null) {
-            throw new IllegalArgumentException("Inventory item requires a plot");
+            throw new IllegalArgumentException("Movie item requires a plot");
         }
-        if (COLUMN_REVIEW_QUANTITY == null) {
-            throw new IllegalArgumentException("Inventory item requires a review quantity");
-        }
-        if (COLUMN_TRAILER_QUANTITY == null) {
-            throw new IllegalArgumentException("Inventory item requires a trailer quantity");
-        }
+
 
         SQLiteDatabase database = movieDbHelper.getWritableDatabase();
 
@@ -194,6 +187,9 @@ public class MovieProvider extends ContentProvider {
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection,
                       @Nullable String[] selectionArgs) {
+        SQLiteDatabase database = movieDbHelper.getReadableDatabase();
+        database.delete(MovieDbHelper.DATABASE_NAME, selection, selectionArgs);
+
         return 0;
     }
 

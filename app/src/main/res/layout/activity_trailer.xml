@@ -4,6 +4,7 @@
     android:id="@+id/viewFrame"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:gravity="center"
     android:background="@drawable/curtains"
     tools:context=".TrailerActivity">
 
@@ -13,12 +14,13 @@
         android:layout_height="wrap_content"
         android:background="@android:color/transparent"
         android:clickable="true"
-        android:columnWidth="360dp"
         android:drawSelectorOnTop="true"
         android:focusable="true"
         android:numColumns="auto_fit"
-        android:stretchMode="spacingWidthUniform"
-        android:verticalSpacing="1dp" />
+        android:columnWidth="240dp"
+        android:horizontalSpacing="12dp"
+        android:stretchMode="columnWidth"
+        android:verticalSpacing="12dp" />
 
     <TextView
         android:id="@+id/empty_view"

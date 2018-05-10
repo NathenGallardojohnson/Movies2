@@ -104,19 +104,18 @@
             android:textStyle="bold"
             tools:text="8.1/10" />
 
-        <ImageButton
+        <ToggleButton
             android:id="@+id/favorite_button"
-            style="@style/Widget.AppCompat.ImageButton"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
             android:layout_below="@+id/vote"
             android:layout_margin="16dp"
             android:layout_toEndOf="@+id/image"
-            android:background="@android:drawable/btn_star_big_off"
             android:contentDescription="@string/favorites_button"
             android:minWidth="96dp"
             android:padding="6dp"
-            android:textAlignment="center" />
+            android:textOff=""
+            android:textOn="" />
 
         <TextView
             android:id="@+id/plot"

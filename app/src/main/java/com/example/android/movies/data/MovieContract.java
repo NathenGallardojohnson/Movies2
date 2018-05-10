@@ -18,6 +18,9 @@ public final class MovieContract {
 
     public static final String PATH_FAVORITES = "movie/favorites";
 
+
+    public static final String ALL = "_ID != NULL";
+
     public static final class MovieEntry implements BaseColumns {
 
         public final static String _ID = BaseColumns._ID;
@@ -40,12 +43,8 @@ public final class MovieContract {
 
         public static final String COLUMN_PLOT = "plot";
 
-        public static final String COLUMN_REVIEW_QUANTITY = "reviewQuantity";
-
-        public static final String COLUMN_TRAILER_QUANTITY = "trailerQuantity";
-
         public static final Uri CONTENT_URI =
-                Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MOVIE);
+                Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MOVIES);
 
         public static final String CONTENT_MOVIES_TYPE =
                 ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + AUTHORITY + "/" + PATH_MOVIES;
@@ -62,12 +61,10 @@ public final class MovieContract {
                         COLUMN_RELEASE_DATE,
                         COLUMN_POSTER_PATH,
                         COLUMN_VOTE_AVERAGE,
-                        COLUMN_PLOT,
-                        COLUMN_REVIEW_QUANTITY,
-                        COLUMN_TRAILER_QUANTITY};
+                        COLUMN_PLOT};
 
         public static final String[] FAVORITE_PROJECTION =
-                    {_ID, COLUMN_ID, COLUMN_FAVORITED,
+                {_ID, COLUMN_ID,
                             COLUMN_TITLE,
                             COLUMN_RELEASE_DATE,
                             COLUMN_POSTER_PATH,
