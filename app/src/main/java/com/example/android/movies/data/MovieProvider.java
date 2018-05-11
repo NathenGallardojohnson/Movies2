@@ -188,8 +188,8 @@ public class MovieProvider extends ContentProvider {
     public int delete(@NonNull Uri uri, @Nullable String selection,
                       @Nullable String[] selectionArgs) {
         SQLiteDatabase database = movieDbHelper.getReadableDatabase();
-        database.delete(MovieDbHelper.DATABASE_NAME, selection, selectionArgs);
-
+        database.delete(MovieContract.MovieEntry.TABLE_NAME, selection, null);
+        getContext().getContentResolver().notifyChange(uri, null);
         return 0;
     }
 

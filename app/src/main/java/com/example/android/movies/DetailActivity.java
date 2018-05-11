@@ -21,7 +21,6 @@ import com.example.android.movies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
 import static com.example.android.movies.data.MovieContract.BASE_CONTENT_URI;
-import static com.example.android.movies.data.MovieContract.PATH_MOVIE;
 import static com.example.android.movies.data.MovieContract.PATH_MOVIES;
 
 public class DetailActivity extends AppCompatActivity {
@@ -80,9 +79,9 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (isFavorited) {
-                    String selection = ("WHERE id=" + id);
-                    Uri uri = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MOVIE);
-                    if ((contentResolver.delete(uri, selection, null) == 1)) {
+                    String selection = ("id=" + id);
+                    Uri uri = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MOVIES);
+                    if ((contentResolver.delete(uri, selection, null) == 0)) {
                         isFavorited = false;
                         favoritesButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_off));
                     }

@@ -77,11 +77,11 @@ public final class MovieContract {
 
         }
 
-        public static final String IS_FAVORITED = "WHERE COLUMN_FAVORITED = ?";
+    public static final String IS_FAVORITED = "WHERE favorited = ?";
 
-        public static final String ORDER_BY_POPULAR = "ORDER BY COLUMN_POPULARITY DESC";
+    public static final String ORDER_BY_POPULAR = "popularity DESC";
 
-        public static final String ORDER_BY_VOTE = "ORDER BY COLUMN_VOTE_AVERAGE DESC";
+    public static final String ORDER_BY_VOTE = "voteAverage DESC";
 
         public static final String[] FAVORITED = {"true"};
 

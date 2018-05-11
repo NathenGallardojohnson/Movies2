@@ -32,4 +32,5 @@
     <string name="trailer_button_description">click for movie trailers</string>
     <string name="image_for_the_movie_trailer">Image for the movie trailer</string>
     <string name="tool_text">Welcome back to Popular Movies! In this second and final stage, you’ll add additional functionality to the app you built in Stage 1.</string>
+    <string name="preference_file_key">MovieAppPreferencesFile</string>
 </resources>
