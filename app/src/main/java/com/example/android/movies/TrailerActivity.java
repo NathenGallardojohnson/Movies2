@@ -35,24 +35,23 @@ public class TrailerActivity extends AppCompatActivity implements
 
     private static final int RECOVERY_DIALOG_REQUEST = 1;
     private static Trailer trailer;
-    private static Bundle bundle = new Bundle();
+    private static final Bundle bundle = new Bundle();
     private TrailerGridAdapter trailerGridAdapter;
     private GridView gridView;
     private YouTubePlayerFragment playerFragment;
-    private List<Trailer> trailers = new ArrayList<>();
+    private final List<Trailer> trailers = new ArrayList<>();
     private View playerView;
     private YouTubePlayer player;
     private TextView mEmptyStateTextView;
     private ProgressBar loadingIndicator;
     private Dialog errorDialog;
-    private boolean wasResumed;
     private State state;
-    private LoaderManager.LoaderCallbacks<List<Trailer>> trailerLoaderCallbacks =
+    private final LoaderManager.LoaderCallbacks<List<Trailer>> trailerLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<List<Trailer>>() {
                 @NonNull
                 @Override
                 public VideoLoader onCreateLoader(int id, @Nullable Bundle args) {
-                    String url = args.getString("QUERY");
+                    String url = args != null ? args.getString("QUERY") : null;
 
                     View loadingIndicator = findViewById(R.id.loading_indicator);
                     loadingIndicator.setVisibility(View.VISIBLE);
@@ -183,7 +182,6 @@ public class TrailerActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        wasResumed = true;
         if (state.equals(State.VIDEO_PLAYING)) {
             gridView.setVisibility(View.GONE);
             playerView.setVisibility(View.VISIBLE);
@@ -216,19 +214,13 @@ public class TrailerActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onPause() {
-        wasResumed = false;
-        super.onPause();
-    }
-
-    @Override
     protected void onDestroy() {
         getSupportLoaderManager().destroyLoader(TRAILER_LOADER_ID);
         super.onDestroy();
     }
 
     //Utility for network testing
-    protected boolean isOnline() {
+    private boolean isOnline() {
         // Get a reference to the ConnectivityManager to check state of network connectivity
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);

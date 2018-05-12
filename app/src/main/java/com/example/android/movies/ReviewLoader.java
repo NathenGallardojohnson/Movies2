@@ -4,13 +4,9 @@ import android.content.Context;
 
 import java.util.List;
 
-/**
- * Created by Hardkornate on 3/22/18.
- */
-
 class ReviewLoader extends android.support.v4.content.AsyncTaskLoader<List<Review>> {
 
-    private String mUrl;
+    private final String mUrl;
 
     ReviewLoader(Context context, String url) {
         super(context);

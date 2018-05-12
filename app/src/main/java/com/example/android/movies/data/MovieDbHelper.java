@@ -7,10 +7,10 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.example.android.movies.data.MovieContract.MovieEntry;
 
-public class MovieDbHelper extends SQLiteOpenHelper {
+class MovieDbHelper extends SQLiteOpenHelper {
 
 
-    protected static final String DATABASE_NAME = "movie.db";
+    private static final String DATABASE_NAME = "movie.db";
     private static final int DATABASE_VERSION = 2;
 
     MovieDbHelper(Context context) {

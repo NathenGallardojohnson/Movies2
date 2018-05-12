@@ -6,7 +6,7 @@ import java.util.List;
 
 class VideoLoader extends android.support.v4.content.AsyncTaskLoader<List<Trailer>> {
 
-    private String mUrl;
+    private final String mUrl;
 
     public VideoLoader(Context context, String url) {
         super(context);

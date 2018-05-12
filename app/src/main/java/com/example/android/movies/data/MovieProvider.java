@@ -37,15 +37,16 @@ import static com.example.android.movies.data.MovieContract.PATH_MOVIE;
 import static com.example.android.movies.data.MovieContract.PATH_MOVIES;
 
 
+@SuppressWarnings("ConstantConditions")
 public class MovieProvider extends ContentProvider {
 
     private static final String LOG_TAG = MovieProvider.class.getSimpleName();
 
-    public static final int MOVIES = 1;
+    private static final int MOVIES = 1;
 
-    public static final int MOVIE = 2;
+    private static final int MOVIE = 2;
 
-    public static final int FAVORITES = 3;
+    private static final int FAVORITES = 3;
 
     private MovieDbHelper movieDbHelper;
 
@@ -80,7 +81,7 @@ public class MovieProvider extends ContentProvider {
                 if (TextUtils.isEmpty(sortOrder)) sortOrder = "_ID ASC";
                 cursor = movieDbHelper.getReadableDatabase().query(
                         MovieContract.MovieEntry.TABLE_NAME,
-                        DETAIL_PROJECTION,
+                        null,
                         selection,
                         selectionArgs,
                         null,
@@ -133,7 +134,7 @@ public class MovieProvider extends ContentProvider {
             case MOVIE:
                 return CONTENT_MOVIE_TYPE;
             case FAVORITES:
-            return CONTENT_FAVORITES_TYPE;
+                return CONTENT_FAVORITES_TYPE;
             default:
                 throw new IllegalStateException("Unknown URI " + uri + " with match " + match);
         }
@@ -243,15 +244,15 @@ public class MovieProvider extends ContentProvider {
             case MOVIE:
                 selection = COLUMN_ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                return toggleFavorited(uri, null, selection, selectionArgs);
+                return toggleFavorited(uri, selection, selectionArgs);
 
             default:
                 throw new IllegalArgumentException("Update is not supported for " + uri);
         }
     }
 
-    public int toggleFavorited(@NonNull Uri uri, @Nullable ContentValues values,
-                               @Nullable String selection, @Nullable String[] selectionArgs){
+    private int toggleFavorited(@NonNull Uri uri,
+                                @Nullable String selection, @Nullable String[] selectionArgs) {
         Cursor cursor;
         ContentValues fValues = new ContentValues();
         int rowsUpdated = 0;
@@ -278,7 +279,7 @@ public class MovieProvider extends ContentProvider {
 
                 rowsUpdated = movieDbHelper.getWritableDatabase().update(
                         TABLE_NAME,
-                        values,
+                        null,
                         selection,
                         selectionArgs);
 

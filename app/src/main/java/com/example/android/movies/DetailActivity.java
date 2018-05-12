@@ -35,25 +35,20 @@ import static com.example.android.movies.data.MovieContract.PATH_MOVIE_DELETE;
 
 public class DetailActivity extends AppCompatActivity {
 
-    static String id;
+    private static String id;
 
-    private final String BASE_API_URL = "http://api.themoviedb.org/3/movie/";
-    private final String VIDEOS = "/videos";
-    private final String REVIEWS = "/reviews";
-    static String plot;
+    private static String plot;
     private TextView mEmptyStateTextView;
     private ProgressBar loadingIndicator;
-    static boolean isFavorited;
-    static String popularity;
-    static String title;
-    static String releaseDate;
-    static String posterPath;
-    static String voteAverage;
+    private static boolean isFavorited;
+    private static String popularity;
+    private static String title;
+    private static String releaseDate;
+    private static String posterPath;
+    private static String voteAverage;
     private final String LOG_TAG = DetailActivity.class.getSimpleName();
-    //API KEY REMOVED - get one at  https://www.themoviedb.org/account/signup
-    private final String API_KEY = ("?api_key=" + MOVIE_KEY);
 
-    ToggleButton favoritesButton;
+    private ToggleButton favoritesButton;
     private ContentResolver contentResolver;
 
     @Override
@@ -66,16 +61,20 @@ public class DetailActivity extends AppCompatActivity {
 
         final Bundle args = getIntent().getExtras();
 
-        title = args.getString("title");
-        releaseDate = args.getString("releaseDate");
-        posterPath = args.getString("posterPath");
-        voteAverage = args.getString("voteAverage");
-        popularity = args.getString("popularity");
-        plot = args.getString("plot");
-        id = args.getString("id");
-        isFavorited = args.getBoolean("isFavorited");
+        title = args != null ? args.getString("title") : null;
+        releaseDate = args != null ? args.getString("releaseDate") : null;
+        posterPath = args != null ? args.getString("posterPath") : null;
+        voteAverage = args != null ? args.getString("voteAverage") : null;
+        popularity = args != null ? args.getString("popularity") : null;
+        plot = args != null ? args.getString("plot") : null;
+        id = args != null ? args.getString("id") : null;
+        isFavorited = args != null && args.getBoolean("isFavorited");
 
+        String BASE_API_URL = "http://api.themoviedb.org/3/movie/";
+        String REVIEWS = "/reviews";
+        String API_KEY = ("?api_key=" + MOVIE_KEY);
         final String reviewUrl = (BASE_API_URL + id + REVIEWS + API_KEY);
+        String VIDEOS = "/videos";
         final String trailerUrl = (BASE_API_URL + id + VIDEOS + API_KEY);
 
         setViews();

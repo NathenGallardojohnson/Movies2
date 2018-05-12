@@ -358,11 +358,11 @@ class Utils {
         return (BASE_THUMBNAIL_URL + videoId + SIZE);
     }
 
-    public static int getScreenWidth() {
+    private static int getScreenWidth() {
         return Resources.getSystem().getDisplayMetrics().widthPixels;
     }
 
-    public static int getScreenHeight() {
+    private static int getScreenHeight() {
         return Resources.getSystem().getDisplayMetrics().heightPixels;
     }
 
@@ -377,8 +377,8 @@ class Utils {
             width = (int) (.3 * (double) width);
             height = width / 16 * 9;
         }
-        Pair dimensions = new Pair(height, width);
-        return dimensions;
+        //noinspection unchecked
+        return new Pair(height, width);
     }
 
 }

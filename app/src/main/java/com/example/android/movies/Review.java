@@ -1,13 +1,9 @@
 package com.example.android.movies;
 
-public class Review {
+class Review {
 
-    private String Author;
-    private String Content;
-
-    Review() {
-
-    }
+    private final String Author;
+    private final String Content;
 
     Review(String author, String content) {
         this.Author = author;
@@ -18,16 +14,8 @@ public class Review {
         return Author;
     }
 
-    public void setAuthor(String author) {
-        Author = author;
-    }
-
     public String getContent() {
         return Content;
-    }
-
-    public void setContent(String content) {
-        Content = content;
     }
 
 }

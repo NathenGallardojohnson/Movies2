@@ -2,10 +2,10 @@ package com.example.android.movies;
 
 class Trailer {
 
-    private String trailer_name;
-    private String trailer_key;
+    private final String trailer_name;
+    private final String trailer_key;
 
-    private String trailer_url;
+    private final String trailer_url;
 
     Trailer(String trailer_name, String trailer_key, String trailer_url) {
         this.trailer_name = trailer_name;

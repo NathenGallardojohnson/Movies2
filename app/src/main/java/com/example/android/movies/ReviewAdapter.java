@@ -9,14 +9,12 @@ import android.widget.TextView;
 
 import java.util.List;
 
-public class ReviewAdapter extends BaseAdapter {
+class ReviewAdapter extends BaseAdapter {
 
-    private Context context;
-    private LayoutInflater inflater;
-    private List<Review> reviews;
+    private final LayoutInflater inflater;
+    private final List<Review> reviews;
 
     public ReviewAdapter(Context context, List<Review> reviews) {
-        this.context = context;
         this.reviews = reviews;
         inflater = LayoutInflater.from(context);
     }
@@ -39,7 +37,7 @@ public class ReviewAdapter extends BaseAdapter {
     @Override
     public View getView(int position, View view, ViewGroup parent) {
         View v = view;
-        ViewHolder holder = null;
+        ViewHolder holder;
         if (view == null) {
             v = inflater.inflate(R.layout.review_item, parent, false);
             holder = new ViewHolder();
@@ -64,7 +62,7 @@ public class ReviewAdapter extends BaseAdapter {
         notifyDataSetInvalidated();
     }
 
-    public class ViewHolder {
+    class ViewHolder {
         TextView authorView;
         TextView contentView;
     }

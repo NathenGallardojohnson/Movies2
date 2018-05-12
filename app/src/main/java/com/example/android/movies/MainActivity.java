@@ -26,7 +26,6 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.example.android.movies.data.MovieContract.FAVORITED;
 import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PLOT;
@@ -42,8 +41,6 @@ import static com.example.android.movies.data.MovieContract.ORDER_BY_VOTE;
 
 public class MainActivity extends AppCompatActivity {
 
-    private final String LOG_TAG = MainActivity.class.getSimpleName();
-
     private static final int MOVIE_LOADER_ID = 1;
     private static final int FAVORITE_LOADER_ID = 2;
     private static final String MOVIE_KEY = "movies";
@@ -53,6 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private List<MovieData> movieData = new ArrayList<>();
     private final String BASE_API_URL = "http://api.themoviedb.org/3/movie";
     private final String POPULAR = "/popular";
+    @SuppressWarnings("FieldCanBeLocal")
     private final String TOP_RATED = "/top_rated";
     //API KEY REMOVED - get one at https://www.themoviedb.org/account/signup
     private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
@@ -126,19 +124,7 @@ public class MainActivity extends AppCompatActivity {
         super.onPause();
     }
 
-    protected boolean isOnline() {
-        // Get a reference to the ConnectivityManager to check state of network connectivity
-        ConnectivityManager connMgr = (ConnectivityManager)
-                getSystemService(Context.CONNECTIVITY_SERVICE);
-
-        // Get details on the currently active default data network
-        NetworkInfo networkInfo = connMgr != null ? connMgr.getActiveNetworkInfo() : null;
-
-        // If there is a network connection, fetch data
-        return (networkInfo != null && networkInfo.isConnected());
-    }
-
-    private LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
+    private final LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<Cursor>() {
 
                 @Override
@@ -148,7 +134,7 @@ public class MainActivity extends AppCompatActivity {
                             CONTENT_URI,
                             FAVORITE_PROJECTION,
                             IS_FAVORITED,
-                            FAVORITED,
+                            null,
                             ORDER_BY
                     );
                 }
@@ -173,7 +159,6 @@ public class MainActivity extends AppCompatActivity {
                             } while (data.moveToNext());
                         }
                     }
-                    data.close();
                 }
 
                 @Override
@@ -183,8 +168,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             };
-
-    private LoaderManager.LoaderCallbacks<List<MovieData>> movieLoaderCallbacks =
+    private final LoaderManager.LoaderCallbacks<List<MovieData>> movieLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<List<MovieData>>() {
 
                 @Override
@@ -231,6 +215,18 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             };
+
+    private boolean isOnline() {
+        // Get a reference to the ConnectivityManager to check state of network connectivity
+        ConnectivityManager connMgr = (ConnectivityManager)
+                getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        // Get details on the currently active default data network
+        NetworkInfo networkInfo = connMgr != null ? connMgr.getActiveNetworkInfo() : null;
+
+        // If there is a network connection, fetch data
+        return (networkInfo != null && networkInfo.isConnected());
+    }
 
     private boolean checkIfFavorited(String id) {
         for (int i = 0; i < favoritesData.size(); i++) {
@@ -300,7 +296,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private boolean showFavorites() {
+    private void showFavorites() {
         // Clear the adapter of previous movie data
         gridAdapter.clear();
 
@@ -311,12 +307,10 @@ public class MainActivity extends AppCompatActivity {
             // Update empty state with no connection error message
             mEmptyStateTextView.setText(R.string.no_favorites);
             mEmptyStateTextView.setVisibility(View.VISIBLE);
-            return false;
         } else {
             mEmptyStateTextView.setVisibility(View.GONE);
             gridAdapter.addAll(favoritesData);
             gridAdapter.notifyDataSetChanged();
-            return true;
         }
     }
 
@@ -327,7 +321,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
     }
 
-    private boolean sortBy() {
+    private void sortBy() {
         getPrefs();
         if (isOnline()) {
             // Get a reference to the LoaderManager, in order to interact with loaders
@@ -335,14 +329,12 @@ public class MainActivity extends AppCompatActivity {
             bundle.putString("QUERY", url);
             getSupportLoaderManager().initLoader(MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
             getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
-            return true;
         } else {
             // Clear the adapter of previous movie data
             gridAdapter.clear();
             loadingIndicator.setVisibility(View.GONE);
             // Update empty state with no connection error message
             mEmptyStateTextView.setText(R.string.no_internet_connection);
-            return false;
         }
     }
 
@@ -368,10 +360,18 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        movieData = savedInstanceState.getParcelableArrayList(MOVIE_KEY);
+        url = savedInstanceState.getString(URL_KEY);
+        getPrefs();
+    }
+
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
         outState.putParcelableArrayList(MOVIE_KEY, (ArrayList<? extends Parcelable>) movieData);
         outState.putString(URL_KEY, url);
         setPrefs();
-        super.onSaveInstanceState(outState);
     }
 }

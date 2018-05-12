@@ -4,13 +4,13 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 public class MovieData implements Parcelable{
-    private String mTitle = " ";
-    private String mReleaseDate = " ";
-    private String mPosterPath;
-    private String mVoteAverage = " ";
-    private String mPopularity = " ";
-    private String mPlot = " ";
-    private String mId;
+    private final String mTitle;
+    private final String mReleaseDate;
+    private final String mPosterPath;
+    private final String mVoteAverage;
+    private final String mPopularity;
+    private final String mPlot;
+    private final String mId;
 
     MovieData(String title, String releaseDate, String posterPath, String voteAverage,
               String popularity, String plot, String id) {
@@ -20,11 +20,6 @@ public class MovieData implements Parcelable{
         mVoteAverage = voteAverage;
         mPopularity = popularity;
         mPlot = plot;
-        mId = id;
-    }
-
-    public MovieData(String posterPath, String id){
-        mPosterPath = posterPath;
         mId = id;
     }
 
@@ -50,9 +45,6 @@ public class MovieData implements Parcelable{
         }
     };
 
-    public MovieData() {
-
-    }
 
     public String getTitle() {
         return mTitle;

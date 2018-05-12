@@ -19,17 +19,17 @@ import java.util.List;
 public class ReviewActivity extends AppCompatActivity {
 
     private static final int REVIEW_LOADER_ID = 3;
-    ListView listView;
+    private ListView listView;
     private TextView mEmptyStateTextView;
     private ProgressBar loadingIndicator;
     private ReviewAdapter reviewAdapter;
-    private LoaderManager.LoaderCallbacks<List<Review>> reviewLoaderCallbacks =
+    private final LoaderManager.LoaderCallbacks<List<Review>> reviewLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<List<Review>>() {
 
                 @NonNull
                 @Override
                 public ReviewLoader onCreateLoader(int id, @Nullable Bundle args) {
-                    String url = args.getString("QUERY");
+                    String url = args != null ? args.getString("QUERY") : null;
                     View loadingIndicator = findViewById(R.id.loading_indicator);
                     loadingIndicator.setVisibility(View.VISIBLE);
                     return new ReviewLoader(ReviewActivity.this, url);
@@ -89,7 +89,7 @@ public class ReviewActivity extends AppCompatActivity {
         }
     }
 
-    protected boolean isOnline() {
+    private boolean isOnline() {
         // Get a reference to the ConnectivityManager to check state of network connectivity
         ConnectivityManager connMgr = (ConnectivityManager)
                 getSystemService(Context.CONNECTIVITY_SERVICE);
