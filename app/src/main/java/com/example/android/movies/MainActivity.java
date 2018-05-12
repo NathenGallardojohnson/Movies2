@@ -59,7 +59,7 @@ public class MainActivity extends AppCompatActivity {
     private GridViewAdapter gridAdapter;
     private ProgressBar loadingIndicator;
     private String url = (BASE_API_URL + POPULAR + API_KEY);
-    private String ORDER_BY = null;
+    private String ORDER_BY = ORDER_BY_POPULAR;
     private boolean SHOW_FAVORITES = false;
     private TextView mEmptyStateTextView;
     private List<MovieData> favoritesData = new ArrayList<>();
@@ -245,15 +245,6 @@ public class MainActivity extends AppCompatActivity {
         getPrefs();
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
-
-        MenuItem sortItem;
-        MenuItem favBox = findViewById(R.id.favorites_only);
-
-        if (ORDER_BY.equals(ORDER_BY_POPULAR)) sortItem = findViewById(R.id.sort_by_votes);
-        else sortItem = findViewById(R.id.sort_by_rating);
-
-        sortItem.setChecked(true);
-        favBox.setChecked(SHOW_FAVORITES);
         return true;
     }
 
