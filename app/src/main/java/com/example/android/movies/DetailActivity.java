@@ -10,6 +10,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -17,21 +18,41 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.ToggleButton;
 
-import com.example.android.movies.data.MovieContract;
 import com.squareup.picasso.Picasso;
 
+import static com.example.android.movies.Keys.MOVIE_KEY;
 import static com.example.android.movies.data.MovieContract.BASE_CONTENT_URI;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_FAVORITED;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PLOT;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POPULARITY;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POSTER_PATH;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_RELEASE_DATE;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TITLE;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE;
 import static com.example.android.movies.data.MovieContract.PATH_MOVIES;
+import static com.example.android.movies.data.MovieContract.PATH_MOVIE_DELETE;
 
 public class DetailActivity extends AppCompatActivity {
+
+    static String id;
+
     private final String BASE_API_URL = "http://api.themoviedb.org/3/movie/";
     private final String VIDEOS = "/videos";
     private final String REVIEWS = "/reviews";
-    //API KEY REMOVED - get one at  https://www.themoviedb.org/account/signup
-    private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
+    static String plot;
     private TextView mEmptyStateTextView;
     private ProgressBar loadingIndicator;
     static boolean isFavorited;
+    static String popularity;
+    static String title;
+    static String releaseDate;
+    static String posterPath;
+    static String voteAverage;
+    private final String LOG_TAG = DetailActivity.class.getSimpleName();
+    //API KEY REMOVED - get one at  https://www.themoviedb.org/account/signup
+    private final String API_KEY = ("?api_key=" + MOVIE_KEY);
+
     ToggleButton favoritesButton;
     private ContentResolver contentResolver;
 
@@ -42,28 +63,22 @@ public class DetailActivity extends AppCompatActivity {
 
         mEmptyStateTextView = findViewById(R.id.empty_view);
         loadingIndicator = findViewById(R.id.loading_indicator);
+
         final Bundle args = getIntent().getExtras();
-        final String title = args.getString("title");
-        final String releaseDate = args.getString("releaseDate");
-        final String posterPath = args.getString("posterPath");
-        final String voteAverage = args.getString("voteAverage");
-        final String popularity = args.getString("popularity");
-        final String plot = args.getString("plot");
-        final String id = args.getString("id");
+
+        title = args.getString("title");
+        releaseDate = args.getString("releaseDate");
+        posterPath = args.getString("posterPath");
+        voteAverage = args.getString("voteAverage");
+        popularity = args.getString("popularity");
+        plot = args.getString("plot");
+        id = args.getString("id");
         isFavorited = args.getBoolean("isFavorited");
+
         final String reviewUrl = (BASE_API_URL + id + REVIEWS + API_KEY);
         final String trailerUrl = (BASE_API_URL + id + VIDEOS + API_KEY);
-        String posterUrl = Utils.getPosterUrl(posterPath);
-        TextView titleTextView = findViewById(R.id.title);
-        titleTextView.setText(title);
-        TextView releaseTextView = findViewById(R.id.release_date);
-        releaseTextView.setText(releaseDate);
-        TextView voteAverageTextView = findViewById(R.id.vote);
-        voteAverageTextView.setText(voteAverage);
-        TextView plotTextView = findViewById(R.id.plot);
-        plotTextView.setText(plot);
-        ImageView imageView = findViewById(R.id.image);
-        Picasso.with(this).load(posterUrl).into(imageView);
+
+        setViews();
 
         contentResolver = DetailActivity.this.getContentResolver();
 
@@ -79,24 +94,27 @@ public class DetailActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 if (isFavorited) {
-                    String selection = ("id=" + id);
-                    Uri uri = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MOVIES);
-                    if ((contentResolver.delete(uri, selection, null) == 0)) {
+                    String selection = (PATH_MOVIE_DELETE + id);
+                    Uri uri = Uri.withAppendedPath(BASE_CONTENT_URI, selection);
+                    if (contentResolver.delete(uri, null, null) != 0) {
                         isFavorited = false;
                         favoritesButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_off));
                     }
                 } else {
                     ContentValues contentValues = new ContentValues();
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_ID, id);
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_FAVORITED, isFavorited);
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_TITLE, title);
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_RELEASE_DATE, releaseDate);
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_POSTER_PATH, posterPath);
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE, voteAverage);
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_POPULARITY, popularity);
-                    contentValues.put(MovieContract.MovieEntry.COLUMN_PLOT, plot);
+                    contentValues.put(COLUMN_ID, id);
+                    contentValues.put(COLUMN_FAVORITED, "true");
+                    contentValues.put(COLUMN_TITLE, title);
+                    contentValues.put(COLUMN_RELEASE_DATE, releaseDate);
+                    contentValues.put(COLUMN_POSTER_PATH, posterPath);
+                    contentValues.put(COLUMN_VOTE_AVERAGE, voteAverage);
+                    contentValues.put(COLUMN_POPULARITY, popularity);
+                    contentValues.put(COLUMN_PLOT, plot);
+
                     Uri uri = Uri.withAppendedPath(BASE_CONTENT_URI, PATH_MOVIES);
                     Uri newFavorite = contentResolver.insert(uri, contentValues);
+                    if (newFavorite != null) Log.e(LOG_TAG, newFavorite.toString());
+
                     isFavorited = true;
                     favoritesButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_on));
                 }
@@ -142,6 +160,24 @@ public class DetailActivity extends AppCompatActivity {
         loadingIndicator.setVisibility(View.GONE);
     }
 
+    private void setViews() {
+        TextView titleTextView = findViewById(R.id.title);
+        titleTextView.setText(title);
+
+        TextView releaseTextView = findViewById(R.id.release_date);
+        releaseTextView.setText(releaseDate);
+
+        TextView voteAverageTextView = findViewById(R.id.vote);
+        voteAverageTextView.setText(voteAverage);
+
+        TextView plotTextView = findViewById(R.id.plot);
+        plotTextView.setText(plot);
+
+        ImageView imageView = findViewById(R.id.image);
+        String posterUrl = Utils.getPosterUrl(posterPath);
+        Picasso.with(this).load(posterUrl).into(imageView);
+    }
+
     private boolean isOnline() {
         // Get a reference to the ConnectivityManager to check state of network connectivity
         ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -153,9 +189,32 @@ public class DetailActivity extends AppCompatActivity {
         return (networkInfo != null && networkInfo.isConnected());
     }
 
-    public static void log(Object value)
-    {
-        System.out.println(value);
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        title = savedInstanceState.getString("title");
+        releaseDate = savedInstanceState.getString("releaseDate");
+        posterPath = savedInstanceState.getString("posterPath");
+        voteAverage = savedInstanceState.getString("voteAverage");
+        popularity = savedInstanceState.getString("popularity");
+        plot = savedInstanceState.getString("plot");
+        id = savedInstanceState.getString("id");
+        isFavorited = savedInstanceState.getBoolean("isFavorited");
+
+        setViews();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString("title", title);
+        outState.putString("releaseDate", releaseDate);
+        outState.putString("posterPath", posterPath);
+        outState.putString("voteAverage", voteAverage);
+        outState.putString("popularity", popularity);
+        outState.putString("plot", plot);
+        outState.putString("id", id);
+        outState.putBoolean("isFavorited", isFavorited);
     }
 
 }

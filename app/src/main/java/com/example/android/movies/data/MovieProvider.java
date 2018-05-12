@@ -5,18 +5,20 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.UriMatcher;
 import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import java.util.Objects;
+
 import static com.example.android.movies.data.MovieContract.FAVORITED;
 import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PLOT;
+import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POPULARITY;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POSTER_PATH;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_RELEASE_DATE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TITLE;
@@ -26,8 +28,10 @@ import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_M
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_MOVIE_TYPE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.DETAIL_PROJECTION;
 import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITE_PROJECTION;
+import static com.example.android.movies.data.MovieContract.MovieEntry.IS_FAVORITE_PROJECTION;
 import static com.example.android.movies.data.MovieContract.MovieEntry.TABLE_NAME;
-import static com.example.android.movies.data.MovieContract.MovieEntry._ID;
+import static com.example.android.movies.data.MovieContract.NOT_FAVORITED;
+import static com.example.android.movies.data.MovieContract.ORDER_BY_POPULAR;
 import static com.example.android.movies.data.MovieContract.PATH_FAVORITES;
 import static com.example.android.movies.data.MovieContract.PATH_MOVIE;
 import static com.example.android.movies.data.MovieContract.PATH_MOVIES;
@@ -67,14 +71,14 @@ public class MovieProvider extends ContentProvider {
     @Override
     public Cursor query(@NonNull Uri uri, String[] projection, String selection,
                         String[] selectionArgs, String sortOrder) {
-        SQLiteDatabase database = movieDbHelper.getReadableDatabase();
+        movieDbHelper.getReadableDatabase();
 
         Cursor cursor;
 
         switch (sUriMatcher.match(uri)) {
             case MOVIES:
                 if (TextUtils.isEmpty(sortOrder)) sortOrder = "_ID ASC";
-                cursor = database.query(
+                cursor = movieDbHelper.getReadableDatabase().query(
                         MovieContract.MovieEntry.TABLE_NAME,
                         DETAIL_PROJECTION,
                         selection,
@@ -85,9 +89,9 @@ public class MovieProvider extends ContentProvider {
                 break;
 
             case MOVIE:
-                selection = _ID + "=?";
+                selection = COLUMN_ID + "=?";
                 selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
-                cursor = database.query(
+                cursor = movieDbHelper.getReadableDatabase().query(
                         MovieContract.MovieEntry.TABLE_NAME,
                         DETAIL_PROJECTION,
                         selection,
@@ -98,8 +102,8 @@ public class MovieProvider extends ContentProvider {
                 break;
 
             case FAVORITES:
-                if (TextUtils.isEmpty(sortOrder)) sortOrder = "_ID ASC";
-                cursor = database.query(
+                if (TextUtils.isEmpty(sortOrder)) sortOrder = ORDER_BY_POPULAR;
+                cursor = movieDbHelper.getReadableDatabase().query(
                         TABLE_NAME,
                         FAVORITE_PROJECTION,
                         IS_FAVORITED,
@@ -114,7 +118,7 @@ public class MovieProvider extends ContentProvider {
 
         }
 
-        cursor.setNotificationUri(getContext().getContentResolver(), uri);
+        cursor.setNotificationUri(Objects.requireNonNull(getContext()).getContentResolver(), uri);
 
         return cursor;
     }
@@ -166,20 +170,20 @@ public class MovieProvider extends ContentProvider {
         if (COLUMN_VOTE_AVERAGE == null) {
             throw new IllegalArgumentException("Movie item requires a vote average");
         }
+        if (COLUMN_POPULARITY == null) {
+            throw new IllegalArgumentException("Movie item requires a popularity number");
+        }
         if (COLUMN_PLOT == null) {
             throw new IllegalArgumentException("Movie item requires a plot");
         }
 
-
-        SQLiteDatabase database = movieDbHelper.getWritableDatabase();
-
-        long id = database.insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
+        long id = movieDbHelper.getWritableDatabase().insert(MovieContract.MovieEntry.TABLE_NAME, null, values);
         // If the ID is -1, then the insertion failed. Log an error and return null.
         if (id == -1) {
             Log.e(LOG_TAG, "Failed to insert row for " + uri);
             return null;
         }
-        getContext().getContentResolver().notifyChange(uri, null);
+        Objects.requireNonNull(getContext()).getContentResolver().notifyChange(uri, null);
 
         return ContentUris.withAppendedId(uri, id);
     }
@@ -187,18 +191,60 @@ public class MovieProvider extends ContentProvider {
     @Override
     public int delete(@NonNull Uri uri, @Nullable String selection,
                       @Nullable String[] selectionArgs) {
-        SQLiteDatabase database = movieDbHelper.getReadableDatabase();
-        database.delete(MovieContract.MovieEntry.TABLE_NAME, selection, null);
-        getContext().getContentResolver().notifyChange(uri, null);
-        return 0;
+        int numRowsDeleted;
+        final int match = sUriMatcher.match(uri);
+
+        switch (match) {
+
+            case MOVIE:
+                selection = COLUMN_ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                numRowsDeleted = movieDbHelper.getReadableDatabase().delete(
+                        MovieContract.MovieEntry.TABLE_NAME,
+                        selection,
+                        selectionArgs);
+                break;
+
+            case MOVIES:
+                numRowsDeleted = movieDbHelper.getReadableDatabase().delete(
+                        MovieContract.MovieEntry.TABLE_NAME,
+                        null,
+                        null);
+                break;
+
+            case FAVORITES:
+                if (selectionArgs == FAVORITED || selectionArgs == NOT_FAVORITED) {
+                    selection = COLUMN_FAVORITED + "=?";
+                    numRowsDeleted = movieDbHelper.getReadableDatabase().delete(
+                            MovieContract.MovieEntry.TABLE_NAME,
+                            selection,
+                            selectionArgs);
+                    break;
+                } else {
+                    throw new UnsupportedOperationException("Unknown uri: " + uri);
+                }
+
+            default:
+                throw new UnsupportedOperationException("Unknown uri: " + uri);
+        }
+
+        if (numRowsDeleted != 0) {
+            Objects.requireNonNull(getContext()).getContentResolver().notifyChange(uri, null);
+        }
+
+        return numRowsDeleted;
     }
 
     @Override
     public int update(@NonNull Uri uri, @Nullable ContentValues values,
                       @Nullable String selection, @Nullable String[] selectionArgs) {
         switch (sUriMatcher.match(uri)) {
-            case FAVORITES:
-                return toggleFavorited(uri, values,selection,selectionArgs);
+
+            case MOVIE:
+                selection = COLUMN_ID + "=?";
+                selectionArgs = new String[]{String.valueOf(ContentUris.parseId(uri))};
+                return toggleFavorited(uri, null, selection, selectionArgs);
+
             default:
                 throw new IllegalArgumentException("Update is not supported for " + uri);
         }
@@ -206,22 +252,43 @@ public class MovieProvider extends ContentProvider {
 
     public int toggleFavorited(@NonNull Uri uri, @Nullable ContentValues values,
                                @Nullable String selection, @Nullable String[] selectionArgs){
-        SQLiteDatabase database = movieDbHelper.getWritableDatabase();
-        if(values.containsKey(COLUMN_FAVORITED)) {
+        Cursor cursor;
+        ContentValues fValues = new ContentValues();
+        int rowsUpdated = 0;
+        cursor = movieDbHelper.getWritableDatabase().query
+                (
+                        TABLE_NAME,
+                        IS_FAVORITE_PROJECTION,
+                        selection,
+                        selectionArgs,
+                        null,
+                        null,
+                        null
+                );
 
-                if (values.getAsBoolean(COLUMN_FAVORITED)) {
-                    values.put(COLUMN_FAVORITED, "false");
+        if (cursor != null) {
+            if (cursor.moveToFirst()) {
+                boolean isFav = (FAVORITED[0].equals(cursor.getString(cursor.getColumnIndex(COLUMN_FAVORITED))));
+
+                if (isFav) {
+                    fValues.put(COLUMN_FAVORITED, "false");
                 } else {
-                    values.put(COLUMN_FAVORITED, "true");
+                    fValues.put(COLUMN_FAVORITED, "true");
+                }
+
+                rowsUpdated = movieDbHelper.getWritableDatabase().update(
+                        TABLE_NAME,
+                        values,
+                        selection,
+                        selectionArgs);
+
+                if (rowsUpdated != 0) {
+                    Objects.requireNonNull(getContext()).getContentResolver().notifyChange(uri, null);
+
                 }
             }
-            int rowsUpdated = database.update(TABLE_NAME, values, selection, selectionArgs);
-
-            if (rowsUpdated != 0) {
-                getContext().getContentResolver().notifyChange(uri, null);
-            }
-
-            return rowsUpdated;
-
+        }
+        cursor.close();
+        return rowsUpdated;
     }
 }

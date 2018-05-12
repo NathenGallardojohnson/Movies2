@@ -11,7 +11,7 @@ public class MovieDbHelper extends SQLiteOpenHelper {
 
 
     protected static final String DATABASE_NAME = "movie.db";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     MovieDbHelper(Context context) {
 
@@ -26,14 +26,14 @@ public class MovieDbHelper extends SQLiteOpenHelper {
 
                 "CREATE TABLE " + MovieEntry.TABLE_NAME + " (" +
                         MovieEntry._ID               + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
-                        MovieEntry.COLUMN_FAVORITED       + " STRING, " +
-                        MovieEntry.COLUMN_ID      + " STRING, " +
-                        MovieEntry.COLUMN_TITLE + " STRING, " +
-                        MovieEntry.COLUMN_RELEASE_DATE + " REAL, " +
-                        MovieEntry.COLUMN_POSTER_PATH + " STRING, " +
-                        MovieEntry.COLUMN_VOTE_AVERAGE + " STRING, " +
-                        MovieEntry.COLUMN_POPULARITY + " STRING, " +
-                        MovieEntry.COLUMN_PLOT + " STRING, " +
+                        MovieEntry.COLUMN_FAVORITED + " STRING NOT NULL, " +
+                        MovieEntry.COLUMN_ID + " STRING NOT NULL, " +
+                        MovieEntry.COLUMN_TITLE + " STRING NOT NULL, " +
+                        MovieEntry.COLUMN_RELEASE_DATE + " REAL NOT NULL, " +
+                        MovieEntry.COLUMN_POSTER_PATH + " STRING NOT NULL, " +
+                        MovieEntry.COLUMN_VOTE_AVERAGE + " STRING NOT NULL, " +
+                        MovieEntry.COLUMN_POPULARITY + " STRING NOT NULL, " +
+                        MovieEntry.COLUMN_PLOT + " STRING NOT NULL, " +
                         " UNIQUE (" + MovieEntry.COLUMN_ID + ") ON CONFLICT REPLACE);";
 
         db.execSQL(SQL_CREATE_MOVIE_TABLE);

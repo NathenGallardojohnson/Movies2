@@ -26,6 +26,8 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.example.android.movies.data.MovieContract.FAVORITED;
+import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PLOT;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_POPULARITY;
@@ -34,6 +36,7 @@ import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_RE
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TITLE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_URI;
+import static com.example.android.movies.data.MovieContract.MovieEntry.FAVORITE_PROJECTION;
 import static com.example.android.movies.data.MovieContract.ORDER_BY_POPULAR;
 import static com.example.android.movies.data.MovieContract.ORDER_BY_VOTE;
 
@@ -60,50 +63,6 @@ public class MainActivity extends AppCompatActivity {
     private boolean SHOW_FAVORITES = false;
     private TextView mEmptyStateTextView;
     private List<MovieData> favoritesData = new ArrayList<>();
-    private LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
-            new LoaderManager.LoaderCallbacks<Cursor>() {
-
-                @Override
-                public Loader onCreateLoader(int id, Bundle bundle) {
-                    return new CursorLoader(
-                            MainActivity.this,
-                            CONTENT_URI,
-                            null,
-                            null,
-                            null,
-                            ORDER_BY
-                    );
-                }
-
-                @Override
-                public void onLoadFinished(@NonNull Loader loader, Cursor data) {
-
-                    if (data.getCount() > 0) {
-                        if (data.moveToFirst()) {
-                            do {
-
-                                String title = data.getString(data.getColumnIndex(COLUMN_TITLE));
-                                String releaseDate = data.getString(data.getColumnIndex(COLUMN_RELEASE_DATE));
-                                String posterPath = data.getString(data.getColumnIndex(COLUMN_POSTER_PATH));
-                                String voteAverage = data.getString(data.getColumnIndex(COLUMN_VOTE_AVERAGE));
-                                String popularity = data.getString(data.getColumnIndex(COLUMN_POPULARITY));
-                                String plot = data.getString(data.getColumnIndex(COLUMN_PLOT));
-                                String id = data.getString(data.getColumnIndex(COLUMN_ID));
-
-                                favoritesData.add(new MovieData(title, releaseDate, posterPath, voteAverage, popularity, plot, id));
-                            } while (data.moveToNext());
-                        }
-
-                    }
-                }
-
-                @Override
-                public void onLoaderReset(@NonNull Loader loader) {
-                    // Clear the adapter of previous movie data
-                    gridAdapter.clear();
-                }
-
-            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -179,6 +138,52 @@ public class MainActivity extends AppCompatActivity {
         return (networkInfo != null && networkInfo.isConnected());
     }
 
+    private LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
+            new LoaderManager.LoaderCallbacks<Cursor>() {
+
+                @Override
+                public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
+                    return new CursorLoader(
+                            MainActivity.this,
+                            CONTENT_URI,
+                            FAVORITE_PROJECTION,
+                            IS_FAVORITED,
+                            FAVORITED,
+                            ORDER_BY
+                    );
+                }
+
+                @Override
+                public void onLoadFinished(@NonNull Loader<Cursor> loader, Cursor data) {
+
+                    if (data.getCount() > 0) {
+                        if (data.moveToFirst()) {
+                            favoritesData = new ArrayList<>();
+                            do {
+
+                                String title = data.getString(data.getColumnIndex(COLUMN_TITLE));
+                                String releaseDate = data.getString(data.getColumnIndex(COLUMN_RELEASE_DATE));
+                                String posterPath = data.getString(data.getColumnIndex(COLUMN_POSTER_PATH));
+                                String voteAverage = data.getString(data.getColumnIndex(COLUMN_VOTE_AVERAGE));
+                                String popularity = data.getString(data.getColumnIndex(COLUMN_POPULARITY));
+                                String plot = data.getString(data.getColumnIndex(COLUMN_PLOT));
+                                String id = data.getString(data.getColumnIndex(COLUMN_ID));
+
+                                favoritesData.add(new MovieData(title, releaseDate, posterPath, voteAverage, popularity, plot, id));
+                            } while (data.moveToNext());
+                        }
+                    }
+                    data.close();
+                }
+
+                @Override
+                public void onLoaderReset(@NonNull Loader loader) {
+                    // Clear the adapter of previous movie data
+                    gridAdapter.clear();
+                }
+
+            };
+
     private LoaderManager.LoaderCallbacks<List<MovieData>> movieLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<List<MovieData>>() {
 
@@ -230,9 +235,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean checkIfFavorited(String id) {
         for (int i = 0; i < favoritesData.size(); i++) {
             MovieData mFavoriteData = favoritesData.get(i);
-            if (mFavoriteData.getId().contains(id)) {
-                return true;
-            }
+            if (mFavoriteData.getId().contains(id)) return true;
         }
         return false;
     }
@@ -242,6 +245,15 @@ public class MainActivity extends AppCompatActivity {
         getPrefs();
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
+
+        MenuItem sortItem;
+        MenuItem favBox = findViewById(R.id.favorites_only);
+
+        if (ORDER_BY.equals(ORDER_BY_POPULAR)) sortItem = findViewById(R.id.sort_by_votes);
+        else sortItem = findViewById(R.id.sort_by_rating);
+
+        sortItem.setChecked(true);
+        favBox.setChecked(SHOW_FAVORITES);
         return true;
     }
 
@@ -318,9 +330,10 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void getFavorites() {
+        getPrefs();
+
         getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
         getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
-
     }
 
     private boolean sortBy() {
@@ -360,6 +373,7 @@ public class MainActivity extends AppCompatActivity {
         SharedPreferences.Editor editor = sharedPref.edit();
         editor.putBoolean(FAVORITE_KEY, SHOW_FAVORITES);
         editor.putString(ORDER_BY_KEY, ORDER_BY);
+        editor.apply();
     }
 
     @Override

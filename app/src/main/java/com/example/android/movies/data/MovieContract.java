@@ -16,10 +16,10 @@ public final class MovieContract {
 
     public static final String PATH_MOVIE = "movie/#";
 
+    public static final String PATH_MOVIE_DELETE = "movie/";
+
     public static final String PATH_FAVORITES = "movie/favorites";
-
-
-    public static final String ALL = "_ID != NULL";
+    public static final String IS_FAVORITED = "favorited=?";
 
     public static final class MovieEntry implements BaseColumns {
 
@@ -56,28 +56,36 @@ public final class MovieContract {
                 ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + AUTHORITY + "/" + PATH_FAVORITES;
 
         public static final String[] DETAIL_PROJECTION =
-                {_ID, COLUMN_ID, COLUMN_FAVORITED,
+                {
+                        _ID,
+                        COLUMN_ID,
+                        COLUMN_FAVORITED,
                         COLUMN_TITLE,
                         COLUMN_RELEASE_DATE,
                         COLUMN_POSTER_PATH,
                         COLUMN_VOTE_AVERAGE,
-                        COLUMN_PLOT};
+                        COLUMN_PLOT
+                };
+
+        public static final String[] IS_FAVORITE_PROJECTION =
+                {COLUMN_FAVORITED};
 
         public static final String[] FAVORITE_PROJECTION =
-                {_ID, COLUMN_ID,
-                            COLUMN_TITLE,
-                            COLUMN_RELEASE_DATE,
-                            COLUMN_POSTER_PATH,
-                            COLUMN_VOTE_AVERAGE,
-                            COLUMN_POPULARITY,
-                            COLUMN_PLOT};
+                {
+                        _ID,
+                        COLUMN_ID,
+                        COLUMN_TITLE,
+                        COLUMN_RELEASE_DATE,
+                        COLUMN_POSTER_PATH,
+                        COLUMN_VOTE_AVERAGE,
+                        COLUMN_POPULARITY,
+                        COLUMN_PLOT
+                };
 
         public static final String[] FAVORITED_PROJECTION =
                     {_ID, COLUMN_ID, COLUMN_FAVORITED};
 
         }
-
-    public static final String IS_FAVORITED = "WHERE favorited = ?";
 
     public static final String ORDER_BY_POPULAR = "popularity DESC";
 
