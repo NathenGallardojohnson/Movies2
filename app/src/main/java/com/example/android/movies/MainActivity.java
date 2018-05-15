@@ -14,6 +14,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int FAVORITE_LOADER_ID = 2;
     private static final String MOVIE_KEY = "movies";
     private static final String FAVORITE_KEY = "favorite";
+    private static final String INDEX_KEY = "index";
     private static final String ORDER_BY_KEY = "orderby";
     private static final String URL_KEY = "url";
     private List<MovieData> movieData = new ArrayList<>();
@@ -61,29 +63,64 @@ public class MainActivity extends AppCompatActivity {
     private boolean SHOW_FAVORITES = false;
     private TextView mEmptyStateTextView;
     private List<MovieData> favoritesData = new ArrayList<>();
+    private static final String LOG_TAG = MainActivity.class.getSimpleName();
+    static int index = 0;
+    private List<MovieData> initData = new ArrayList<>();
+    private GridView gridView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         setContentView(R.layout.activity_main);
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
-        GridView gridView = findViewById(R.id.gridView);
+        gridView = findViewById(R.id.gridView);
         mEmptyStateTextView = findViewById(R.id.empty_view);
-
-        gridAdapter = new GridViewAdapter(this, movieData);
-        gridView.setAdapter(gridAdapter);
 
         loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
 
-        getFavorites();
-
-        if (isOnline()) {
-            sortBy();
+        if (savedInstanceState != null) {
+            movieData = savedInstanceState.getParcelableArrayList(MOVIE_KEY);
+            favoritesData = savedInstanceState.getParcelableArrayList(FAVORITE_KEY);
+            url = savedInstanceState.getString(URL_KEY);
+            index = savedInstanceState.getInt(INDEX_KEY);
+            getPrefs();
+            if (SHOW_FAVORITES) {
+                gridAdapter = new GridViewAdapter(this, initData);
+                gridView.setAdapter(gridAdapter);
+                if (favoritesData != null && !favoritesData.isEmpty()) {
+                    gridView.setSelection(index);
+                    gridAdapter.clear();
+                    gridAdapter.addAll(favoritesData);
+                    mEmptyStateTextView.setVisibility(View.GONE);
+                    gridAdapter.notifyDataSetChanged();
+                } else {
+                    getFavorites();
+                    showFavorites();
+                }
+            } else {
+                gridAdapter = new GridViewAdapter(this, initData);
+                gridView.setAdapter(gridAdapter);
+                // If there is a valid list of {@link Movies}, then add them to the adapter's
+                // data set. This will trigger the GridView to update.
+                if (movieData != null && !movieData.isEmpty()) {
+                    mEmptyStateTextView.setVisibility(View.GONE);
+                    gridAdapter.addAll(movieData);
+                    gridAdapter.notifyDataSetChanged();
+                } else {
+                    sortBy();
+                }
+            }
         } else {
-            showFavorites();
+            getPrefs();
+            getFavorites();
+            gridAdapter = new GridViewAdapter(this, initData);
+            gridView.setAdapter(gridAdapter);
+            if (SHOW_FAVORITES) showFavorites();
+            else sortBy();
         }
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -104,24 +141,26 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+        Log.i(LOG_TAG, "onCreate");
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         getPrefs();
-        getFavorites();
-        if (SHOW_FAVORITES) {
-            showFavorites();
-        } else {
-            sortBy();
-        }
+        gridView.setSelection(index);
+        Log.i(LOG_TAG, "onResume");
+
     }
+
 
     @Override
     protected void onPause() {
         setPrefs();
+        index = gridView.getFirstVisiblePosition();
         super.onPause();
+
+        Log.i(LOG_TAG, "onPause");
     }
 
     private final LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
@@ -241,6 +280,17 @@ public class MainActivity extends AppCompatActivity {
         getPrefs();
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.menu_main, menu);
+
+        MenuItem favoritesItem = menu.findItem(R.id.favorites_only);
+        MenuItem ratingItem = menu.findItem(R.id.sort_by_rating);
+        MenuItem votesItem = menu.findItem(R.id.sort_by_votes);
+
+        if (SHOW_FAVORITES) favoritesItem.setChecked(true);
+        else favoritesItem.setChecked(false);
+
+        if (ORDER_BY.equals(ORDER_BY_POPULAR)) votesItem.setChecked(true);
+        else ratingItem.setChecked(true);
+        Log.i(LOG_TAG, "onCreateOptionsMenu");
         return true;
     }
 
@@ -263,33 +313,27 @@ public class MainActivity extends AppCompatActivity {
                     showFavorites();
                     return true;
                 }
+
             case R.id.sort_by_rating:
-                if (item.isChecked()) {
-                    item.setChecked(false);
-                    url = (BASE_API_URL + POPULAR + API_KEY);
-                    ORDER_BY = ORDER_BY_POPULAR;
-                    sortBy();
-                } else {
-                    item.setChecked(true);
-                    url = (BASE_API_URL + TOP_RATED + API_KEY);
-                    ORDER_BY = ORDER_BY_VOTE;
-                    sortBy();
-                }
+                ORDER_BY = ORDER_BY_VOTE;
+                url = (BASE_API_URL + TOP_RATED + API_KEY);
                 setPrefs();
+                if (!item.isChecked()) item.setChecked(true);
+                if (SHOW_FAVORITES) {
+                    getFavorites();
+                    showFavorites();
+                } else sortBy();
                 return true;
+
             case R.id.sort_by_votes:
-                if (item.isChecked()) {
-                    item.setChecked(false);
-                    url = (BASE_API_URL + TOP_RATED + API_KEY);
-                    ORDER_BY = ORDER_BY_VOTE;
-                    sortBy();
-                } else {
-                    item.setChecked(true);
-                    url = (BASE_API_URL + POPULAR + API_KEY);
-                    ORDER_BY = ORDER_BY_POPULAR;
-                    sortBy();
-                }
+                ORDER_BY = ORDER_BY_POPULAR;
+                url = (BASE_API_URL + POPULAR + API_KEY);
                 setPrefs();
+                if (!item.isChecked()) item.setChecked(true);
+                if (SHOW_FAVORITES) {
+                    getFavorites();
+                    showFavorites();
+                } else sortBy();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -303,10 +347,13 @@ public class MainActivity extends AppCompatActivity {
         // If there is a valid list of {@link Movies}, then add them to the adapter's
         // data set. This will trigger the GridView to update.
         if (favoritesData.isEmpty()) {
-            loadingIndicator.setVisibility(View.GONE);
-            // Update empty state with no connection error message
-            mEmptyStateTextView.setText(R.string.no_favorites);
-            mEmptyStateTextView.setVisibility(View.VISIBLE);
+            getFavorites();
+            if (favoritesData.isEmpty()) {
+                loadingIndicator.setVisibility(View.GONE);
+                // Update empty state with no connection error message
+                mEmptyStateTextView.setText(R.string.no_favorites);
+                mEmptyStateTextView.setVisibility(View.VISIBLE);
+            }
         } else {
             mEmptyStateTextView.setVisibility(View.GONE);
             gridAdapter.addAll(favoritesData);
@@ -344,9 +391,12 @@ public class MainActivity extends AppCompatActivity {
                 getString(R.string.preference_file_key), Context.MODE_PRIVATE);
 
         if (sharedPref != null) {
-            SHOW_FAVORITES = sharedPref.getBoolean(FAVORITE_KEY, SHOW_FAVORITES);
+            SHOW_FAVORITES = sharedPref.getBoolean(FAVORITE_KEY, false);
             ORDER_BY = sharedPref.getString(ORDER_BY_KEY, ORDER_BY_POPULAR);
-        }
+            if (ORDER_BY.equals(ORDER_BY_POPULAR)) {
+                url = (BASE_API_URL + POPULAR + API_KEY);
+            } else url = (BASE_API_URL + TOP_RATED + API_KEY);
+        } else setPrefs();
     }
 
     private void setPrefs() {
@@ -359,19 +409,19 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        movieData = savedInstanceState.getParcelableArrayList(MOVIE_KEY);
-        url = savedInstanceState.getString(URL_KEY);
-        getPrefs();
-    }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putParcelableArrayList(MOVIE_KEY, (ArrayList<? extends Parcelable>) movieData);
-        outState.putString(URL_KEY, url);
+    protected void onSaveInstanceState(Bundle savedInstanceState) {
+        getPrefs();
+        savedInstanceState.putParcelableArrayList(MOVIE_KEY,
+                (ArrayList<? extends Parcelable>) movieData);
+        savedInstanceState.putParcelableArrayList(FAVORITE_KEY,
+                (ArrayList<? extends Parcelable>) favoritesData);
+        savedInstanceState.putString(URL_KEY, url);
+        savedInstanceState.putInt(INDEX_KEY, index);
         setPrefs();
+        super.onSaveInstanceState(savedInstanceState);
+
+        Log.i(LOG_TAG, "onSaveInstanceState");
     }
 }
