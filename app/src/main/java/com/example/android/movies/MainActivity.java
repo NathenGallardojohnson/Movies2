@@ -115,11 +115,13 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         } else {
-            getPrefs();
-            getFavorites();
             gridAdapter = new GridViewAdapter(this, initData);
             gridView.setAdapter(gridAdapter);
-            if (SHOW_FAVORITES) showFavorites();
+            getPrefs();
+            if (SHOW_FAVORITES) {
+                getFavorites();
+                showFavorites();
+            }
             else sortBy();
         }
 

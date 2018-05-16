@@ -46,7 +46,7 @@ class GridViewAdapter extends ArrayAdapter<MovieData> {
         MovieData movieData = data.get(position);
         holder.imageTitle.setText(movieData.getTitle());
         String url = Utils.getPosterUrl(movieData.getPosterPath());
-        Picasso.with(context).load(url).into(holder.image);
+        Picasso.with(context).load(url).placeholder(R.drawable.user_placeholder).error(R.drawable.user_placeholder_error).into(holder.image);
 
         return row;
     }
