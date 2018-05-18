@@ -47,6 +47,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String MOVIE_KEY = "movies";
     private static final String FAVORITE_KEY = "favorite";
     private static final String INDEX_KEY = "index";
+    private static final String TOP_KEY = "top";
     private static final String ORDER_BY_KEY = "orderby";
     private static final String URL_KEY = "url";
     private List<MovieData> movieData = new ArrayList<>();
@@ -65,8 +66,11 @@ public class MainActivity extends AppCompatActivity {
     private List<MovieData> favoritesData = new ArrayList<>();
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
     static int index = 0;
+    static int top = 0;
     private List<MovieData> initData = new ArrayList<>();
     private GridView gridView;
+    private static final String LIST_STATE = "listState";
+    private Parcelable mListState = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,6 +107,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             } else {
                 gridAdapter = new GridViewAdapter(this, initData);
+                gridView.setSelection(index);
                 gridView.setAdapter(gridAdapter);
                 // If there is a valid list of {@link Movies}, then add them to the adapter's
                 // data set. This will trigger the GridView to update.
@@ -121,8 +126,7 @@ public class MainActivity extends AppCompatActivity {
             if (SHOW_FAVORITES) {
                 getFavorites();
                 showFavorites();
-            }
-            else sortBy();
+            } else sortBy();
         }
 
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -150,8 +154,22 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         getPrefs();
-        gridView.setSelection(index);
+
+        Context context = MainActivity.this;
+        SharedPreferences sharedPref = context.getSharedPreferences(
+                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
+
+        if (sharedPref != null) {
+            SHOW_FAVORITES = sharedPref.getBoolean(FAVORITE_KEY, false);
+            ORDER_BY = sharedPref.getString(ORDER_BY_KEY, ORDER_BY_POPULAR);
+            Log.e(LOG_TAG, "onResume: " + ORDER_BY + " " + SHOW_FAVORITES);
+            if (SHOW_FAVORITES) getFavorites();
+        }
+        if (mListState != null)
+            gridView.onRestoreInstanceState(mListState);
+        mListState = null;
         Log.i(LOG_TAG, "onResume");
+        //gridView.setSelectionFromTop(index, top);
 
     }
 
@@ -159,7 +177,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         setPrefs();
-        index = gridView.getFirstVisiblePosition();
+        //index = gridView.getFirstVisiblePosition();
+        //View v = gridView.getChildAt(0);
+        //top = (v == null) ? 0 : (v.getTop() - gridView.getPaddingTop());
+        mListState = gridView.onSaveInstanceState();
         super.onPause();
 
         Log.i(LOG_TAG, "onPause");
@@ -168,8 +189,10 @@ public class MainActivity extends AppCompatActivity {
     private final LoaderManager.LoaderCallbacks<Cursor> favoriteLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<Cursor>() {
 
+
                 @Override
                 public Loader<Cursor> onCreateLoader(int id, Bundle bundle) {
+                    Log.e(LOG_TAG, "onCreateLoader: fav");
                     return new CursorLoader(
                             MainActivity.this,
                             CONTENT_URI,
@@ -200,6 +223,7 @@ public class MainActivity extends AppCompatActivity {
                             } while (data.moveToNext());
                         }
                     }
+                    showFavorites();
                 }
 
                 @Override
@@ -209,6 +233,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
             };
+
     private final LoaderManager.LoaderCallbacks<List<MovieData>> movieLoaderCallbacks =
             new LoaderManager.LoaderCallbacks<List<MovieData>>() {
 
@@ -366,7 +391,7 @@ public class MainActivity extends AppCompatActivity {
     private void getFavorites() {
         getPrefs();
 
-        getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
+        //        getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
         getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
     }
 
@@ -411,17 +436,28 @@ public class MainActivity extends AppCompatActivity {
         editor.apply();
     }
 
+    @Override
+    protected void onRestoreInstanceState(Bundle state) {
+        super.onRestoreInstanceState(state);
+        mListState = state.getParcelable(LIST_STATE);
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle savedInstanceState) {
         getPrefs();
+        //index = gridView.getFirstVisiblePosition();
+        //View v = gridView.getChildAt(0);
+        //top = (v == null) ? 0 : (v.getTop() - gridView.getPaddingTop());
         savedInstanceState.putParcelableArrayList(MOVIE_KEY,
                 (ArrayList<? extends Parcelable>) movieData);
         savedInstanceState.putParcelableArrayList(FAVORITE_KEY,
                 (ArrayList<? extends Parcelable>) favoritesData);
         savedInstanceState.putString(URL_KEY, url);
         savedInstanceState.putInt(INDEX_KEY, index);
+        savedInstanceState.putInt(TOP_KEY, top);
         setPrefs();
+        mListState = gridView.onSaveInstanceState();
+        savedInstanceState.putParcelable(LIST_STATE, mListState);
         super.onSaveInstanceState(savedInstanceState);
 
         Log.i(LOG_TAG, "onSaveInstanceState");
