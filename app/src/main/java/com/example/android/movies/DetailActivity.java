@@ -58,18 +58,28 @@ public class DetailActivity extends AppCompatActivity {
 
         mEmptyStateTextView = findViewById(R.id.empty_view);
         loadingIndicator = findViewById(R.id.loading_indicator);
+        if (savedInstanceState != null) {
+            title = savedInstanceState.getString("title");
+            releaseDate = savedInstanceState.getString("releaseDate");
+            posterPath = savedInstanceState.getString("posterPath");
+            voteAverage = savedInstanceState.getString("voteAverage");
+            popularity = savedInstanceState.getString("popularity");
+            plot = savedInstanceState.getString("plot");
+            id = savedInstanceState.getString("id");
+            isFavorited = savedInstanceState.getBoolean("isFavorited");
 
-        final Bundle args = getIntent().getExtras();
+        } else {
+            final Bundle args = getIntent().getExtras();
 
-        title = args != null ? args.getString("title") : null;
-        releaseDate = args != null ? args.getString("releaseDate") : null;
-        posterPath = args != null ? args.getString("posterPath") : null;
-        voteAverage = args != null ? args.getString("voteAverage") : null;
-        popularity = args != null ? args.getString("popularity") : null;
-        plot = args != null ? args.getString("plot") : null;
-        id = args != null ? args.getString("id") : null;
-        isFavorited = args != null && args.getBoolean("isFavorited");
-
+            title = args != null ? args.getString("title") : null;
+            releaseDate = args != null ? args.getString("releaseDate") : null;
+            posterPath = args != null ? args.getString("posterPath") : null;
+            voteAverage = args != null ? args.getString("voteAverage") : null;
+            popularity = args != null ? args.getString("popularity") : null;
+            plot = args != null ? args.getString("plot") : null;
+            id = args != null ? args.getString("id") : null;
+            isFavorited = args != null && args.getBoolean("isFavorited");
+        }
         String BASE_API_URL = "http://api.themoviedb.org/3/movie/";
         String REVIEWS = "/reviews";
         String API_KEY = ("?api_key=" + MOVIE_KEY);
@@ -205,7 +215,6 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
         outState.putString("title", title);
         outState.putString("releaseDate", releaseDate);
         outState.putString("posterPath", posterPath);
@@ -214,6 +223,7 @@ public class DetailActivity extends AppCompatActivity {
         outState.putString("plot", plot);
         outState.putString("id", id);
         outState.putBoolean("isFavorited", isFavorited);
+        super.onSaveInstanceState(outState);
     }
 
 }
