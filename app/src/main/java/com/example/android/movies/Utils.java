@@ -29,7 +29,7 @@ class Utils {
     }
 
 
-    static List<MovieData> getData(String requestUrl) {
+    static ArrayList<MovieData> getData(String requestUrl) {
         // Create URL object
         URL url = createUrl(requestUrl);
 
@@ -159,14 +159,14 @@ class Utils {
      * Return a list of {@link MovieData} objects that has been built up from
      * parsing the given JSON response.
      */
-    private static List<MovieData> extractFeatureFromJson(String movieJSON) {
+    private static ArrayList<MovieData> extractFeatureFromJson(String movieJSON) {
         // If the JSON string is empty or null, then return early.
         if (TextUtils.isEmpty(movieJSON)) {
             return null;
         }
 
         // Create an empty ArrayList that we can start adding news to
-        List<MovieData> movieData = new ArrayList<>();
+        ArrayList<MovieData> movieData = new ArrayList<>();
 
         // Try to parse the JSON response string. If there's a problem with the way the JSON
         // is formatted, a JSONException exception object will be thrown.

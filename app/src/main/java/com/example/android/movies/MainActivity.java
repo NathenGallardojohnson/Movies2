@@ -3,6 +3,7 @@ package com.example.android.movies;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -13,6 +14,8 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -25,7 +28,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.List;
+
 
 import static com.example.android.movies.data.MovieContract.IS_FAVORITED;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_ID;
@@ -46,31 +49,24 @@ public class MainActivity extends AppCompatActivity {
     private static final int FAVORITE_LOADER_ID = 2;
     private static final String MOVIE_KEY = "movies";
     private static final String FAVORITE_KEY = "favorite";
-    private static final String INDEX_KEY = "index";
-    private static final String TOP_KEY = "top";
     private static final String ORDER_BY_KEY = "orderby";
-    private static final String URL_KEY = "url";
-    private List<MovieData> movieData = new ArrayList<>();
+    private ArrayList<MovieData> movieData = new ArrayList<>();
     private final String BASE_API_URL = "http://api.themoviedb.org/3/movie";
     private final String POPULAR = "/popular";
     @SuppressWarnings("FieldCanBeLocal")
     private final String TOP_RATED = "/top_rated";
     //API KEY REMOVED - get one at https://www.themoviedb.org/account/signup
     private final String API_KEY = ("?api_key=" + Keys.MOVIE_KEY);
-    private GridViewAdapter gridAdapter;
     private ProgressBar loadingIndicator;
     private String url = (BASE_API_URL + POPULAR + API_KEY);
     private String ORDER_BY = ORDER_BY_POPULAR;
     private boolean SHOW_FAVORITES = false;
     private TextView mEmptyStateTextView;
-    private List<MovieData> favoritesData = new ArrayList<>();
+    private ArrayList<MovieData> favoritesData = new ArrayList<>();
     private static final String LOG_TAG = MainActivity.class.getSimpleName();
-    static int index = 0;
-    static int top = 0;
-    private List<MovieData> initData = new ArrayList<>();
-    private GridView gridView;
-    private static final String LIST_STATE = "listState";
-    private Parcelable mListState = null;
+
+    private GridLayoutManager gridLayoutManager;
+    private RecyclerViewAdapter adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,109 +76,90 @@ public class MainActivity extends AppCompatActivity {
         Toolbar myToolbar = findViewById(R.id.my_toolbar);
         setSupportActionBar(myToolbar);
 
-        gridView = findViewById(R.id.gridView);
+        final RecyclerView recyclerView = findViewById(R.id.recycler_view);
+        getLayoutManager();
+        recyclerView.setLayoutManager(gridLayoutManager);
+
         mEmptyStateTextView = findViewById(R.id.empty_view);
 
         loadingIndicator = findViewById(R.id.loading_indicator);
         loadingIndicator.setVisibility(View.GONE);
 
+        getPrefs();
+
         if (savedInstanceState != null) {
             movieData = savedInstanceState.getParcelableArrayList(MOVIE_KEY);
             favoritesData = savedInstanceState.getParcelableArrayList(FAVORITE_KEY);
-            url = savedInstanceState.getString(URL_KEY);
-            index = savedInstanceState.getInt(INDEX_KEY);
-            getPrefs();
             if (SHOW_FAVORITES) {
-                gridAdapter = new GridViewAdapter(this, initData);
-                gridView.setAdapter(gridAdapter);
-                if (favoritesData != null && !favoritesData.isEmpty()) {
-                    gridView.setSelection(index);
-                    gridAdapter.clear();
-                    gridAdapter.addAll(favoritesData);
-                    mEmptyStateTextView.setVisibility(View.GONE);
-                    gridAdapter.notifyDataSetChanged();
-                } else {
-                    getFavorites();
-                    showFavorites();
-                }
+                adapter = new RecyclerViewAdapter(this, favoritesData);
             } else {
-                gridAdapter = new GridViewAdapter(this, initData);
-                gridView.setSelection(index);
-                gridView.setAdapter(gridAdapter);
-                // If there is a valid list of {@link Movies}, then add them to the adapter's
-                // data set. This will trigger the GridView to update.
-                if (movieData != null && !movieData.isEmpty()) {
-                    mEmptyStateTextView.setVisibility(View.GONE);
-                    gridAdapter.addAll(movieData);
-                    gridAdapter.notifyDataSetChanged();
-                } else {
-                    sortBy();
-                }
+                adapter = new RecyclerViewAdapter(this, movieData);
             }
         } else {
-            gridAdapter = new GridViewAdapter(this, initData);
-            gridView.setAdapter(gridAdapter);
-            getPrefs();
             if (SHOW_FAVORITES) {
-                getFavorites();
-                showFavorites();
-            } else sortBy();
+                getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
+                adapter = new RecyclerViewAdapter(this, favoritesData);
+            } else {
+                sortBy();
+                adapter = new RecyclerViewAdapter(this, movieData);
+            }
         }
 
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                MovieData movieData = (MovieData) parent.getItemAtPosition(position);
-                //Create intent
-                Intent intent = new Intent(MainActivity.this, DetailActivity.class);
-                intent.putExtra("title", movieData.getTitle());
-                intent.putExtra("releaseDate", movieData.getReleaseDate());
-                intent.putExtra("posterPath", movieData.getPosterPath());
-                intent.putExtra("voteAverage", movieData.getVoteAverage());
-                intent.putExtra("popularity", movieData.getPopularity());
-                intent.putExtra("plot", movieData.getPlot());
-                intent.putExtra("id", movieData.getId());
-                intent.putExtra("isFavorited", checkIfFavorited(movieData.getId()));
-
-                //Start details activity
-                startActivity(intent);
+        adapter.setClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                int pos = recyclerView.indexOfChild(v);
+                launchDetailActivity(pos);
             }
         });
-        Log.i(LOG_TAG, "onCreate");
+
+        recyclerView.setAdapter(adapter);
+
+    }
+
+    private void getLayoutManager(){
+        if (MainActivity.this.getResources().getConfiguration()
+                .orientation == Configuration.ORIENTATION_PORTRAIT ){
+            gridLayoutManager = new GridLayoutManager(this, 3);
+        } else { gridLayoutManager = new GridLayoutManager(this, 5);}
+    }
+
+    protected void launchDetailActivity(int position){
+        MovieData detailMovie = movieData.get(position);
+        //Create intent
+        Intent intent = new Intent(MainActivity.this, DetailActivity.class);
+        intent.putExtra("title", detailMovie.getTitle());
+        intent.putExtra("releaseDate", detailMovie.getReleaseDate());
+        intent.putExtra("posterPath", detailMovie.getPosterPath());
+        intent.putExtra("voteAverage", detailMovie.getVoteAverage());
+        intent.putExtra("popularity", detailMovie.getPopularity());
+        intent.putExtra("plot", detailMovie.getPlot());
+        intent.putExtra("id", detailMovie.getId());
+        intent.putExtra("isFavorited", checkIfFavorited(detailMovie.getId()));
+
+        //Start details activity
+        startActivity(intent);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         getPrefs();
-
-        Context context = MainActivity.this;
-        SharedPreferences sharedPref = context.getSharedPreferences(
-                getString(R.string.preference_file_key), Context.MODE_PRIVATE);
-
-        if (sharedPref != null) {
-            SHOW_FAVORITES = sharedPref.getBoolean(FAVORITE_KEY, false);
-            ORDER_BY = sharedPref.getString(ORDER_BY_KEY, ORDER_BY_POPULAR);
-            Log.e(LOG_TAG, "onResume: " + ORDER_BY + " " + SHOW_FAVORITES);
-            if (SHOW_FAVORITES) getFavorites();
+        getLayoutManager();
+        if (SHOW_FAVORITES) {
+            getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
+            adapter = new RecyclerViewAdapter(this, favoritesData);
+        } else {
+            sortBy();
+            adapter = new RecyclerViewAdapter(this, movieData);
         }
-        if (mListState != null)
-            gridView.onRestoreInstanceState(mListState);
-        mListState = null;
         Log.i(LOG_TAG, "onResume");
-        //gridView.setSelectionFromTop(index, top);
-
     }
-
 
     @Override
     protected void onPause() {
         setPrefs();
-        //index = gridView.getFirstVisiblePosition();
-        //View v = gridView.getChildAt(0);
-        //top = (v == null) ? 0 : (v.getTop() - gridView.getPaddingTop());
-        mListState = gridView.onSaveInstanceState();
         super.onPause();
-
         Log.i(LOG_TAG, "onPause");
     }
 
@@ -223,19 +200,27 @@ public class MainActivity extends AppCompatActivity {
                             } while (data.moveToNext());
                         }
                     }
-                    showFavorites();
+                    if (favoritesData.isEmpty()) {
+                        loadingIndicator.setVisibility(View.GONE);
+                        // Update empty state with no connection error message
+                        mEmptyStateTextView.setText(R.string.no_favorites);
+                        mEmptyStateTextView.setVisibility(View.VISIBLE);
+                    } else {
+                        mEmptyStateTextView.setVisibility(View.GONE);
+                        adapter.addAll(favoritesData);
+                    }
                 }
 
                 @Override
                 public void onLoaderReset(@NonNull Loader loader) {
                     // Clear the adapter of previous movie data
-                    gridAdapter.clear();
+                    adapter.clear();
                 }
 
             };
 
-    private final LoaderManager.LoaderCallbacks<List<MovieData>> movieLoaderCallbacks =
-            new LoaderManager.LoaderCallbacks<List<MovieData>>() {
+    private final LoaderManager.LoaderCallbacks<ArrayList<MovieData>> movieLoaderCallbacks =
+            new LoaderManager.LoaderCallbacks<ArrayList<MovieData>>() {
 
                 @Override
                 public MovieLoader onCreateLoader(int i, Bundle bundle) {
@@ -249,7 +234,7 @@ public class MainActivity extends AppCompatActivity {
                 }
 
                 @Override
-                public void onLoadFinished(@NonNull android.support.v4.content.Loader<List<MovieData>> loader, List<MovieData> data) {
+                public void onLoadFinished(@NonNull android.support.v4.content.Loader<ArrayList<MovieData>> loader, ArrayList<MovieData> data) {
                     // Hide loading indicator because the data has been loaded
                     View loadingIndicator = findViewById(R.id.loading_indicator);
                     loadingIndicator.setVisibility(View.GONE);
@@ -263,21 +248,20 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                     // Clear the adapter of previous movie data
-                    gridAdapter.clear();
+                    adapter.clear();
 
                     // If there is a valid list of {@link Movies}, then add them to the adapter's
                     // data set. This will trigger the GridView to update.
                     if (data != null && !data.isEmpty()) {
                         mEmptyStateTextView.setVisibility(View.GONE);
-                        gridAdapter.addAll(data);
-                        gridAdapter.notifyDataSetChanged();
+                        adapter.addAll(data);
                     }
                 }
 
                 @Override
-                public void onLoaderReset(@NonNull android.support.v4.content.Loader<List<MovieData>> loader) {
+                public void onLoaderReset(@NonNull android.support.v4.content.Loader<ArrayList<MovieData>> loader) {
                     // Loader reset, so we can clear out our existing data.
-                    gridAdapter.clear();
+                    adapter.clear();
                 }
 
             };
@@ -337,7 +321,6 @@ public class MainActivity extends AppCompatActivity {
                     SHOW_FAVORITES = true;
                     setPrefs();
                     getFavorites();
-                    showFavorites();
                     return true;
                 }
 
@@ -348,7 +331,6 @@ public class MainActivity extends AppCompatActivity {
                 if (!item.isChecked()) item.setChecked(true);
                 if (SHOW_FAVORITES) {
                     getFavorites();
-                    showFavorites();
                 } else sortBy();
                 return true;
 
@@ -359,7 +341,6 @@ public class MainActivity extends AppCompatActivity {
                 if (!item.isChecked()) item.setChecked(true);
                 if (SHOW_FAVORITES) {
                     getFavorites();
-                    showFavorites();
                 } else sortBy();
                 return true;
             default:
@@ -367,9 +348,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void showFavorites() {
+/*    private void showFavorites() {
         // Clear the adapter of previous movie data
-        gridAdapter.clear();
+        adapter.clear();
 
         // If there is a valid list of {@link Movies}, then add them to the adapter's
         // data set. This will trigger the GridView to update.
@@ -383,15 +364,13 @@ public class MainActivity extends AppCompatActivity {
             }
         } else {
             mEmptyStateTextView.setVisibility(View.GONE);
-            gridAdapter.addAll(favoritesData);
-            gridAdapter.notifyDataSetChanged();
+            adapter.addAll(favoritesData);
+            adapter.notifyDataSetChanged();
         }
-    }
+    }*/
 
     private void getFavorites() {
         getPrefs();
-
-        //        getSupportLoaderManager().initLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
         getSupportLoaderManager().restartLoader(FAVORITE_LOADER_ID, null, favoriteLoaderCallbacks);
     }
 
@@ -405,7 +384,7 @@ public class MainActivity extends AppCompatActivity {
             getSupportLoaderManager().restartLoader(MOVIE_LOADER_ID, bundle, movieLoaderCallbacks);
         } else {
             // Clear the adapter of previous movie data
-            gridAdapter.clear();
+            adapter.clear();
             loadingIndicator.setVisibility(View.GONE);
             // Update empty state with no connection error message
             mEmptyStateTextView.setText(R.string.no_internet_connection);
@@ -435,29 +414,18 @@ public class MainActivity extends AppCompatActivity {
         editor.putString(ORDER_BY_KEY, ORDER_BY);
         editor.apply();
     }
-
+/*
     @Override
     protected void onRestoreInstanceState(Bundle state) {
         super.onRestoreInstanceState(state);
-        mListState = state.getParcelable(LIST_STATE);
-    }
+    }*/
 
     @Override
     protected void onSaveInstanceState(Bundle savedInstanceState) {
         getPrefs();
-        //index = gridView.getFirstVisiblePosition();
-        //View v = gridView.getChildAt(0);
-        //top = (v == null) ? 0 : (v.getTop() - gridView.getPaddingTop());
-        savedInstanceState.putParcelableArrayList(MOVIE_KEY,
-                (ArrayList<? extends Parcelable>) movieData);
-        savedInstanceState.putParcelableArrayList(FAVORITE_KEY,
-                (ArrayList<? extends Parcelable>) favoritesData);
-        savedInstanceState.putString(URL_KEY, url);
-        savedInstanceState.putInt(INDEX_KEY, index);
-        savedInstanceState.putInt(TOP_KEY, top);
+        savedInstanceState.putParcelableArrayList(MOVIE_KEY, movieData);
+        savedInstanceState.putParcelableArrayList(FAVORITE_KEY, favoritesData);
         setPrefs();
-        mListState = gridView.onSaveInstanceState();
-        savedInstanceState.putParcelable(LIST_STATE, mListState);
         super.onSaveInstanceState(savedInstanceState);
 
         Log.i(LOG_TAG, "onSaveInstanceState");

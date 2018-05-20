@@ -2,9 +2,10 @@ package com.example.android.movies;
 
 import android.content.Context;
 
+import java.util.ArrayList;
 import java.util.List;
 
-class MovieLoader extends android.support.v4.content.AsyncTaskLoader<List<MovieData>> {
+class MovieLoader extends android.support.v4.content.AsyncTaskLoader<ArrayList<MovieData>> {
 
     private final String mUrl;
 
@@ -19,7 +20,7 @@ class MovieLoader extends android.support.v4.content.AsyncTaskLoader<List<MovieD
     }
 
     @Override
-    public List<MovieData> loadInBackground() {
+    public ArrayList<MovieData> loadInBackground() {
         if (mUrl == null) {
             return null;
         }
