@@ -37,7 +37,7 @@
         android:textAppearance="?android:textAppearanceLargeInverse"
         tools:text="@string/empty_text_view" />
 
-    <ProgressBar
+<!--    <ProgressBar
         style="@style/infinite_progress_horizontal"
         android:id="@+id/loading_indicator"
         android:layout_width="match_parent"
@@ -51,7 +51,7 @@
         android:progress="@android:integer/config_shortAnimTime"
         android:progressDrawable="@android:drawable/progress_horizontal"
         android:progressTint="@android:color/holo_orange_dark"
-        android:visibility="visible" />
+        android:visibility="visible" />-->
 
 
 </RelativeLayout>
