@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
@@ -30,6 +31,7 @@ import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_PO
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_RELEASE_DATE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_TITLE;
 import static com.example.android.movies.data.MovieContract.MovieEntry.COLUMN_VOTE_AVERAGE;
+import static com.example.android.movies.data.MovieContract.MovieEntry.CONTENT_URI;
 import static com.example.android.movies.data.MovieContract.PATH_MOVIES;
 import static com.example.android.movies.data.MovieContract.PATH_MOVIE_DELETE;
 
@@ -58,17 +60,7 @@ public class DetailActivity extends AppCompatActivity {
 
         mEmptyStateTextView = findViewById(R.id.empty_view);
         loadingIndicator = findViewById(R.id.loading_indicator);
-        if (savedInstanceState != null) {
-            title = savedInstanceState.getString("title");
-            releaseDate = savedInstanceState.getString("releaseDate");
-            posterPath = savedInstanceState.getString("posterPath");
-            voteAverage = savedInstanceState.getString("voteAverage");
-            popularity = savedInstanceState.getString("popularity");
-            plot = savedInstanceState.getString("plot");
-            id = savedInstanceState.getString("id");
-            isFavorited = savedInstanceState.getBoolean("isFavorited");
 
-        } else {
             final Bundle args = getIntent().getExtras();
 
             title = args != null ? args.getString("title") : null;
@@ -78,8 +70,7 @@ public class DetailActivity extends AppCompatActivity {
             popularity = args != null ? args.getString("popularity") : null;
             plot = args != null ? args.getString("plot") : null;
             id = args != null ? args.getString("id") : null;
-            isFavorited = args != null && args.getBoolean("isFavorited");
-        }
+
         String BASE_API_URL = "http://api.themoviedb.org/3/movie/";
         String REVIEWS = "/reviews";
         String API_KEY = ("?api_key=" + MOVIE_KEY);
@@ -91,13 +82,26 @@ public class DetailActivity extends AppCompatActivity {
 
         contentResolver = DetailActivity.this.getContentResolver();
 
+        Cursor favoritedCursor = contentResolver.query(
+                CONTENT_URI,
+                null,
+                COLUMN_ID + " = " + id,
+                null,
+                null);
+
         favoritesButton = findViewById(R.id.favorite_button);
-        favoritesButton.setChecked(isFavorited);
-        if (isFavorited) {
+
+        if ((favoritedCursor != null ? favoritedCursor.getCount() : 0) != 0) {
+            isFavorited = true;
             favoritesButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_on));
         } else {
+            isFavorited = false;
             favoritesButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_off));
         }
+
+        favoritedCursor.close();
+
+        favoritesButton.setChecked(isFavorited);
 
         favoritesButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -105,10 +109,9 @@ public class DetailActivity extends AppCompatActivity {
                 if (isFavorited) {
                     String selection = (PATH_MOVIE_DELETE + id);
                     Uri uri = Uri.withAppendedPath(BASE_CONTENT_URI, selection);
-                    if (contentResolver.delete(uri, null, null) != 0) {
-                        isFavorited = false;
-                        favoritesButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_off));
-                    }
+                    contentResolver.delete(uri, null, null);
+                    isFavorited = false;
+                    favoritesButton.setBackgroundDrawable(ContextCompat.getDrawable(getApplicationContext(), android.R.drawable.btn_star_big_off));
                 } else {
                     ContentValues contentValues = new ContentValues();
                     contentValues.put(COLUMN_ID, id);
@@ -129,7 +132,6 @@ public class DetailActivity extends AppCompatActivity {
                 }
             }
         });
-
 
         Button reviewButton = findViewById(R.id.review_button);
         reviewButton.setOnClickListener(new View.OnClickListener() {
@@ -201,6 +203,7 @@ public class DetailActivity extends AppCompatActivity {
     @Override
     protected void onRestoreInstanceState(Bundle savedInstanceState) {
         super.onRestoreInstanceState(savedInstanceState);
+        Log.e(LOG_TAG, "onRestoreInstanceState");
         title = savedInstanceState.getString("title");
         releaseDate = savedInstanceState.getString("releaseDate");
         posterPath = savedInstanceState.getString("posterPath");
@@ -215,6 +218,7 @@ public class DetailActivity extends AppCompatActivity {
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
+        Log.e(LOG_TAG, "onSaveInstanceState");
         outState.putString("title", title);
         outState.putString("releaseDate", releaseDate);
         outState.putString("posterPath", posterPath);

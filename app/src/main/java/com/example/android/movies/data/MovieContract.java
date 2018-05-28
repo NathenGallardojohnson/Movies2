@@ -23,7 +23,6 @@ public final class MovieContract {
 
     public static final String ORDER_BY_POPULAR = "popularity DESC";
 
-    public static final String ORDER_BY_VOTE = "voteAverage DESC";
     static final String[] NOT_FAVORITED = {"false"};
 
     public static final class MovieEntry implements BaseColumns {
